@@ -1,0 +1,58 @@
+{
+  "version": 2,
+  "dgSpecHash": "6Ritgpv9g6U=",
+  "success": true,
+  "projectFilePath": "C:\\Projects\\MOVEX-Portal\\src\\MovexPortal.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\hsalazar\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\8.0.0\\microsoft.aspnetcore.authentication.jwtbearer.8.0.0.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\microsoft.aspnetcore.authentication.negotiate\\8.0.0\\microsoft.aspnetcore.authentication.negotiate.8.0.0.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\microsoft.aspnetcore.connections.abstractions\\8.0.0\\microsoft.aspnetcore.connections.abstractions.8.0.0.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\microsoft.aspnetcore.openapi\\8.0.0\\microsoft.aspnetcore.openapi.8.0.0.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\microsoft.extensions.apidescription.server\\6.0.5\\microsoft.extensions.apidescription.server.6.0.5.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\microsoft.extensions.caching.abstractions\\8.0.0\\microsoft.extensions.caching.abstractions.8.0.0.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\microsoft.extensions.caching.memory\\8.0.0\\microsoft.extensions.caching.memory.8.0.0.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\8.0.0\\microsoft.extensions.dependencyinjection.abstractions.8.0.0.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\microsoft.extensions.features\\8.0.0\\microsoft.extensions.features.8.0.0.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\8.0.0\\microsoft.extensions.logging.abstractions.8.0.0.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\microsoft.extensions.options\\8.0.0\\microsoft.extensions.options.8.0.0.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\microsoft.extensions.primitives\\8.0.0\\microsoft.extensions.primitives.8.0.0.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\microsoft.identitymodel.abstractions\\7.0.3\\microsoft.identitymodel.abstractions.7.0.3.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\microsoft.identitymodel.jsonwebtokens\\7.0.3\\microsoft.identitymodel.jsonwebtokens.7.0.3.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\microsoft.identitymodel.logging\\7.0.3\\microsoft.identitymodel.logging.7.0.3.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\microsoft.identitymodel.protocols\\7.0.3\\microsoft.identitymodel.protocols.7.0.3.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\microsoft.identitymodel.protocols.openidconnect\\7.0.3\\microsoft.identitymodel.protocols.openidconnect.7.0.3.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\microsoft.identitymodel.tokens\\7.0.3\\microsoft.identitymodel.tokens.7.0.3.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\microsoft.openapi\\1.4.3\\microsoft.openapi.1.4.3.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\swashbuckle.aspnetcore\\6.5.0\\swashbuckle.aspnetcore.6.5.0.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\swashbuckle.aspnetcore.swagger\\6.5.0\\swashbuckle.aspnetcore.swagger.6.5.0.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\swashbuckle.aspnetcore.swaggergen\\6.5.0\\swashbuckle.aspnetcore.swaggergen.6.5.0.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\swashbuckle.aspnetcore.swaggerui\\6.5.0\\swashbuckle.aspnetcore.swaggerui.6.5.0.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\system.directoryservices.protocols\\8.0.0\\system.directoryservices.protocols.8.0.0.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\system.identitymodel.tokens.jwt\\7.0.3\\system.identitymodel.tokens.jwt.7.0.3.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\system.io.pipelines\\8.0.0\\system.io.pipelines.8.0.0.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\system.text.encodings.web\\8.0.0\\system.text.encodings.web.8.0.0.nupkg.sha512",
+    "C:\\Users\\hsalazar\\.nuget\\packages\\system.text.json\\8.0.0\\system.text.json.8.0.0.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Package 'System.Text.Json' 8.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-8g4q-xg66-9fp4",
+      "libraryId": "System.Text.Json",
+      "targetGraphs": [
+        "net8.0"
+      ]
+    },
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Package 'System.Text.Json' 8.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-hh2w-p6rv-4g7w",
+      "libraryId": "System.Text.Json",
+      "targetGraphs": [
+        "net8.0"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "endpoints": [
+    {
+      "id": "mms175-update",
+      "program": "MMS175MI",
+      "method": "Update",
+      "displayName": "Item Movement",
+      "requiredRole": "Inventory_Write",
+      "riskLevel": "HIGH",
+      "category": "Inventory",
+      "fields": [
+        { "name": "WHLO", "description": "Warehouse", "required": true, "maxLength": 3, "type": "string" },
+        { "name": "ITNO", "description": "Item Number", "required": true, "maxLength": 15, "type": "string" },
+        { "name": "WHSL", "description": "From Location", "required": true, "maxLength": 10, "type": "string" },
+        { "name": "TWSL", "description": "To Location", "required": true, "maxLength": 10, "type": "string" },
+        { "name": "TRQT", "description": "Quantity", "required": true, "type": "decimal" }
+      ]
+    }
+  ]
+}

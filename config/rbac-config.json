@@ -1,0 +1,32 @@
+{
+  "roles": [
+    {
+      "name": "Finance_Write",
+      "description": "Write access for finance operations",
+      "adGroups": ["MOVEX-API-FIN"],
+      "allowedEndpoints": ["mms175-update"],
+      "maxRiskLevel": "HIGH"
+    },
+    {
+      "name": "IT_Write",
+      "description": "Write access for IT operations",
+      "adGroups": ["MOVEX-API-IT"],
+      "allowedEndpoints": ["mms175-update", "mms200-update"],
+      "maxRiskLevel": "HIGH"
+    },
+    {
+      "name": "MES_Write",
+      "description": "Write access for MES operations",
+      "adGroups": ["MOVEX-API-MES"],
+      "allowedEndpoints": ["mms310-update", "mms175-update"],
+      "maxRiskLevel": "HIGH"
+    },
+    {
+      "name": "Only_Read",
+      "description": "Read-only finance access",
+      "adGroups": ["MOVEX-API-RO"],
+      "allowedEndpoints": ["mms200-read"],
+      "maxRiskLevel": "LOW"
+    }
+  ]
+}

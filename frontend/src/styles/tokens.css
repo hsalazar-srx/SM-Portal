@@ -1,0 +1,118 @@
+/* src/styles/tokens.css */
+/* Implements: architecture/ui-ux-best-practices */
+/* Design tokens from approved style guide (Decision-003) */
+/* Spacing: 8px constraint-based grid (Impeccable principles) */
+
+:root {
+  /* === SPACING (8px base unit) === */
+  --space-xs: 0.25rem;   /* 4px */
+  --space-sm: 0.5rem;    /* 8px */
+  --space-md: 1rem;      /* 16px */
+  --space-lg: 2rem;      /* 32px */
+  --space-xl: 4rem;      /* 64px */
+  --space-2xl: 8rem;     /* 128px */
+
+  /* === COLOR SEMANTIC TOKENS === */
+  /* Primary (main actions, focus states) */
+  --color-primary: #0066cc;
+  --color-primary-50: #f0f7ff;
+  --color-primary-100: #e0f0ff;
+  --color-primary-200: #c2e0ff;
+  --color-primary-600: #0052a3;
+  --color-primary-700: #003d7a;
+
+  /* Neutral (text, backgrounds, dividers) */
+  --color-neutral-0: #ffffff;
+  --color-neutral-50: #f9fafb;
+  --color-neutral-100: #f3f4f6;
+  --color-neutral-200: #e5e7eb;
+  --color-neutral-400: #9ca3af;
+  --color-neutral-600: #4b5563;
+  --color-neutral-900: #1a202c;
+
+  /* Status colors */
+  --color-success: #10b981;   /* Green */
+  --color-warning: #f59e0b;   /* Amber */
+  --color-error: #ef4444;     /* Red */
+  --color-info: #3b82f6;      /* Blue */
+
+  /* Semantic aliases for compatibility */
+  --color-bg: var(--color-neutral-0);
+  --color-surface: var(--color-neutral-50);
+  --color-outline: var(--color-neutral-200);
+  --color-text: var(--color-neutral-900);
+  --color-text-weak: var(--color-neutral-600);
+  --color-text-muted: var(--color-neutral-400);
+  --color-danger: var(--color-error);
+  --color-overlay: 0, 0, 0;   /* as RGB tuple for alpha usage */
+
+  /* === TYPOGRAPHY === */
+  /* Font families */
+  --font-sans: "Inter", "Roboto", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* Line heights */
+  --lh-tight: 1.2;
+  --lh-heading: 1.25;
+  --lh-body: 1.6;
+
+  /* Font sizes (fluid responsive) */
+  --fs-display: clamp(32px, 6vw, 48px);
+  --fs-h1: clamp(28px, 5vw, 42px);
+  --fs-h2: clamp(24px, 4vw, 36px);
+  --fs-h3: clamp(20px, 3vw, 28px);
+  --fs-body: 1rem;     /* 16px */
+  --fs-body-sm: 0.875rem;   /* 14px */
+  --fs-caption: 0.75rem;    /* 12px */
+
+  /* === BORDER RADIUS === */
+  --radius-none: 0;
+  --radius-sm: 0.25rem;      /* 4px */
+  --radius-md: 0.5rem;       /* 8px */
+  --radius-lg: 1rem;         /* 16px */
+  --radius-full: 9999px;
+
+  /* === SHADOWS === */
+  --shadow-none: none;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+
+  /* === Z-INDEX === */
+  --z-hide: -1;
+  --z-auto: auto;
+  --z-base: 0;
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+
+  /* === TRANSITIONS === */
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 250ms ease-in-out;
+  --transition-slow: 350ms ease-in-out;
+
+  /* Focus ring color */
+  --ring-blue: 0, 102, 204;  /* #0066cc as RGB */
+}
+
+/* Optional: Dark mode (data-theme="dark") */
+[data-theme="dark"] {
+  --color-bg: #0B1216;
+  --color-surface: #111A20;
+  --color-outline: #25313A;
+  --color-text: #E7EEF3;
+  --color-text-weak: #9FB1BD;
+
+  /* Keep brand blues; optionally nudge for dark */
+  --color-primary: #2C6AA1;
+  --color-primary-600: #105771;
+  --color-primary-300: #6CB9CA;
+
+  --shadow-1: 0 1px 2px rgba(0,0,0,.35), 0 8px 20px rgba(0,0,0,.4);
+  --shadow-2: 0 16px 48px rgba(0,0,0,.55);
+}

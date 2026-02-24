@@ -1,0 +1,45 @@
+/* src/styles/shadcn-theme.css */
+/* Semantic tokens shadcn/ui components can use via var(...) */
+
+:root {
+  /* Foregrounds */
+  --scn-fg: var(--color-text);
+  --scn-fg-muted: var(--color-text-weak);
+  --scn-fg-inverted: #FFFFFF;
+
+  /* Surfaces */
+  --scn-bg: var(--color-bg);
+  --scn-surface: var(--color-surface);
+  --scn-border: var(--color-outline);
+
+  /* Brand */
+  --scn-primary: var(--color-primary);
+  --scn-primary-600: var(--color-primary-600);
+  --scn-primary-300: var(--color-primary-300);
+
+  /* States */
+  --scn-success: var(--color-success);
+  --scn-warning: var(--color-warning);
+  --scn-danger:  var(--color-danger);
+  --scn-info:    var(--color-info);
+}
+
+/* Dark maps the same semantics to dark variables */
+[data-theme="dark"] {
+  --scn-fg: var(--color-text);
+  --scn-fg-muted: var(--color-text-weak);
+  --scn-fg-inverted: #0B1216;
+
+  --scn-bg: var(--color-bg);
+  --scn-surface: var(--color-surface);
+  --scn-border: var(--color-outline);
+
+  --scn-primary: var(--color-primary);
+  --scn-primary-600: var(--color-primary-600);
+  --scn-primary-300: var(--color-primary-300);
+
+  --scn-success: var(--color-success);
+  --scn-warning: var(--color-warning);
+  --scn-danger:  var(--color-danger);
+  --scn-info:    var(--color-info);
+}
