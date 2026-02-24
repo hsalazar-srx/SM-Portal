@@ -1,7 +1,7 @@
 // src/components/ComponentShowcase.tsx
 // Displays all UI components with examples
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import ResponsiveHeader from '@/components/ResponsiveHeader';
 import { Card, CardHeaderStrip, CardBody } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input, Textarea, Select } from '@/components/ui/input';
@@ -9,10 +9,9 @@ import { Badge, BadgeGroup } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Spinner, LoadingState, Skeleton } from '@/components/ui/spinner';
 import { StatsGrid } from '@/components/ui/stats';
-import { H2, H3, Body, Caption } from '@/components/ui/typography';
+import { H2, Body, Caption } from '@/components/ui/typography';
 
 export default function ComponentShowcase() {
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedOption, setSelectedOption] = useState('option1');
   const [badges, setBadges] = useState([
@@ -31,21 +30,16 @@ export default function ComponentShowcase() {
   };
 
   return (
-    <div className="min-h-screen bg-bg text-text py-lg">
-      {/* Header */}
-      <header className="sticky top-0 z-sticky bg-bg border-b border-outline shadow-sm mb-lg">
-        <div className="max-w-7xl mx-auto px-md lg:px-lg h-16 flex items-center justify-between">
-          <H3 className="text-primary m-0 tracking-tight font-bold">Component Showcase</H3>
-          <button
-            onClick={() => navigate('/')}
-            className="text-sm text-primary hover:text-primary-700 underline transition-colors duration-normal"
-          >
-            ← Back to Portal
-          </button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-bg text-text flex flex-col">
+      {/* Responsive Header */}
+      <ResponsiveHeader
+        title="Component Showcase"
+        subtitle="Interactive UI Component Library"
+        showComponentsLink={true}
+      />
 
-      <div className="max-w-7xl mx-auto px-md lg:px-lg space-y-xl">
+      <div className="flex-1 w-full px-md lg:px-lg py-md md:py-lg">
+        <div className="max-w-7xl mx-auto space-y-xl">
         {/* Header */}
         <div className="space-y-md">
           <H2>Component Showcase</H2>
@@ -333,13 +327,11 @@ export default function ComponentShowcase() {
         </Card>
 
         {/* Footer */}
-        <div className="text-center space-y-sm py-lg border-t border-outline mt-xl">
-          <Caption className="text-text-weak">
-            All components follow Impeccable design principles with 8px constraint-based spacing
-          </Caption>
+        <div className="text-center space-y-sm py-md md:py-lg border-t border-outline mt-xl">
           <Caption className="text-text-weak text-xs">
             Built with TypeScript, React, Tailwind CSS, and semantic design tokens
           </Caption>
+        </div>
         </div>
       </div>
     </div>

@@ -22,14 +22,14 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-primary-100 to-primary-200 flex items-center justify-center px-sm py-md">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-primary-100 to-primary-200 flex items-center justify-center px-sm py-md md:py-lg">
       <div className="w-full max-w-md animate-fadeIn">
         {/* Logo/Header */}
-        <div className="text-center mb-lg">
-          <H1 className="text-primary m-0 mb-sm tracking-tight font-bold">
+        <div className="text-center mb-lg md:mb-xl">
+          <H1 className="text-primary m-0 mb-sm tracking-tight font-bold text-3xl md:text-4xl">
             MOVEX Portal
           </H1>
-          <Body className="text-text-weak opacity-90">
+          <Body className="text-text-weak opacity-90 text-sm md:text-base">
             Secure access to M3 endpoints
           </Body>
         </div>
@@ -55,12 +55,16 @@ export default function SignIn() {
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <span className="flex items-center justify-center">
-                    <span className="animate-spin mr-sm">⏳</span>
-                    Signing in...
+                  <span className="flex items-center justify-center gap-xs">
+                    <span className="animate-spin">⏳</span>
+                    <span className="hidden sm:inline">Signing in...</span>
+                    <span className="sm:hidden">Signing...</span>
                   </span>
                 ) : (
-                  'Sign In with Windows AD'
+                  <>
+                    <span className="hidden sm:inline">Sign In with Windows AD</span>
+                    <span className="sm:hidden">Sign In</span>
+                  </>
                 )}
               </Button>
 
@@ -75,7 +79,7 @@ export default function SignIn() {
 
               <div className="pt-md border-t border-outline space-y-sm">
                 <Caption className="text-xs flex gap-sm items-start text-text-weak">
-                  <span className="text-sm">💡</span>
+                  <span className="text-sm flex-shrink-0">💡</span>
                   <span>
                     Make sure you're connected to the <strong>corporate network</strong> or <strong>VPN</strong> 
                     for Windows AD authentication to work.

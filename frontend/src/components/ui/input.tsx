@@ -21,12 +21,13 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <input
         type={type}
         className={cn(
-          "flex h-10 w-full rounded-md border border-outline bg-bg px-md py-sm",
+          "flex h-12 w-full rounded-md border border-outline bg-bg px-md py-sm",
           "text-body font-normal",
           "placeholder:text-text-muted",
           "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:border-transparent",
           "transition-all duration-normal",
           "disabled:cursor-not-allowed disabled:opacity-50",
+          "text-base md:text-sm", // Prevent zoom on iOS
           error && "border-error focus:ring-error",
           className
         )}
