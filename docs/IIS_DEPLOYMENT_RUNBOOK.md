@@ -554,6 +554,163 @@ Set-Acl -Path $appPath -AclObject $acl
 Get-Acl $appPath | Format-List
 ```
 
+### Alternative: IIS Manager Console (GUI-Based Configuration)
+
+If you prefer to use the IIS Manager graphical interface instead of PowerShell, follow these steps:
+
+#### 1. Create App Pool (GUI)
+
+1. **Open IIS Manager**
+   - Press `Win + R` and type `inetmgr`, then Enter
+   - Or: Server Manager → Tools → Internet Information Services Manager
+
+2. **Create New App Pool**
+   - Expand server node in left panel
+   - Right-click **Application Pools** → **Add Application Pool...**
+   - **Name**: `SMPortalPool`
+   - **.NET CLR version**: `No Managed Code` (ASP.NET Core runs out-of-process)
+   - **Managed pipeline mode**: `Integrated`
+   - **Start application pool immediately**: ✓ checked
+   - Click **OK**
+
+3. **Configure App Pool Identity**
+   - Right-click **SMPortalPool** → **Advanced Settings...**
+   - Under **Process Model**:
+     - **Identity**: Click `...` button → Select **Custom account** → **Set...**
+     - Username: `domain\svc_SMPortal`
+     - Password: `ServiceAccountPassword123!@#`
+     - Click **OK**
+   - Under **Behavior**:
+     - **Idle Time-out**: `00:30:00` (30 minutes)
+     - **Max Processes**: `1`
+   - Click **OK**
+
+4. **Restart App Pool**
+   - Right-click **SMPortalPool** → **Cycle** (or Stop/Start)
+
+#### 2. Create Website (GUI)
+
+1. **Add New Website**
+   - Expand server node → Right-click **Sites** → **Add Website...**
+   - **Site name**: `SM-Portal`
+   - **Physical path**: `C:\InetPub\SM-Portal` (create directory first if not exists)
+   - **Binding**:
+     - Type: `https`
+     - IP address: `All Unassigned`
+     - Port: `443`
+     - Host name: `sm-portal.company.local`
+   - **SSL certificate**: (leave blank for now, will configure in next step)
+   - **Application pool**: `SMPortalPool`
+   - Click **OK**
+
+2. **Add HTTP to HTTPS Redirect Website (Optional)**
+   - Repeat above but create as `SM-Portal-HTTP`:
+     - Type: `http`
+     - Port: `80`
+     - Host name: `sm-portal.company.local`
+     - Application pool: `DefaultAppPool`
+
+#### 3. Configure SSL/TLS Certificate (GUI)
+
+1. **Import Certificate**
+   - Open **Certificates** snap-in (certlm.msc)
+   - Navigate to **Local Computer** → **Personal** → **Certificates**
+   - Right-click **Certificates** → **Import...**
+   - Select certificate file: `C:\Certs\sm-portal.company.local.pfx`
+   - Enter password and ensure **Mark key as exportable** is checked
+   - Complete the wizard
+
+2. **Bind Certificate to Website**
+   - In IIS Manager, click on **SM-Portal** website
+   - In right panel under **Edit Site**, click **Bindings**
+   - Select the HTTPS binding (port 443)
+   - Click **Edit...**
+   - **SSL certificate**: Select your certificate from dropdown
+   - **SNI**: ✓ checked
+   - Click **OK**
+
+3. **Verify Binding**
+   - Back in **Site Bindings**, you should see HTTPS binding with certificate thumbprint
+   - Click **Close**
+
+#### 4. Configure Authentication (GUI)
+
+1. **Select SM-Portal Site** in IIS Manager
+2. **In Features View, double-click Authentication**
+3. **Windows Authentication**
+   - Select → Click **Enable** in right panel
+4. **Anonymous Authentication**
+   - Select → Click **Disable** in right panel
+5. **Machine Keys** (if needed)
+   - Select → Click **View Details...** in right panel
+   - Note the machine key for future reference
+
+#### 5. Configure File Permissions (GUI)
+
+1. **Navigate to** `C:\InetPub\SM-Portal` in Windows Explorer
+2. **Right-click folder** → **Properties**
+3. **Security tab** → **Edit...**
+4. **Click Advanced**
+5. **Change Permissions**:
+   - Click **Add...**
+   - **Object type**: Ensure "IIS AppPool" is shown, otherwise click **Locations** and add it
+   - **Enter object name**: `IIS AppPool\SMPortalPool`
+   - Click **Check Names** → should turn it underlined
+   - Click **OK**
+   - Select the new line and click **Edit...**
+   - **Permissions**:
+     - `List folder contents` - ✓
+     - `Read` - ✓
+     - `Read & Execute` - ✓
+   - Click **OK** three times
+
+#### 6. Add Application (if not already done)
+
+1. **Select SM-Portal Site** in IIS Manager
+2. **In the Site area, click SM-Portal (root)**
+3. In the right panel, you should see it's already an application
+4. **Right-click SM-Portal** → **Switch to Content View** (if needed)
+5. No additional configuration needed for ASP.NET Core
+
+#### 7. Enable HTTP/2 and Compression (GUI)
+
+1. **Select SM-Portal Site**
+2. **Double-click HTTP Response Headers** in Features View
+3. **Compression** (if not already configured):
+   - In right panel, right-click → **Open Feature**
+   - Enable both **Static** and **Dynamic** compression
+   - Click back to go to HTTP Response Headers
+4. **Add Custom Headers** (Security):
+   - Right panel → **Add...**
+   - **Strict-Transport-Security**: `max-age=31536000; includeSubDomains`
+   - **X-Content-Type-Options**: `nosniff`
+   - **X-Frame-Options**: `DENY`
+
+#### 8. Configure HTTPS Redirect (Web.config in GUI)
+
+1. **Right-click SM-Portal** → **Explore**
+2. **Create web.config** if it doesn't exist (see Application Deployment section)
+3. Or use **URL Rewrite** feature:
+   - Double-click **URL Rewrite**
+   - **Add Rule** → **Blank rule**
+   - **Pattern**: `.*`
+   - **Action Type**: **Redirect**
+   - **Redirect URL**: `https://{HTTP_HOST}{REQUEST_URI}`
+   - **Append query string**: ✓ checked
+   - Click **Apply** in right panel
+
+#### 9. Test Configuration (GUI)
+
+1. **Right-click SM-Portal Site** → **Browse**
+   - This should open https://sm-portal.company.local in default browser
+   - Certificate warning is expected if self-signed
+   - Should see ASP.NET application or 500 error (expected before deployment)
+
+2. **Check Application Pool Status**
+   - **Application Pools** → **SMPortalPool**
+   - Status should show **Started**
+   - If not, right-click → **Start**
+
 ---
 
 ## Application Deployment
