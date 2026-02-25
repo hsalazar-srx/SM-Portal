@@ -6,7 +6,7 @@
 
 ## 📍 Location
 ```
-C:\Projects\MOVEX-Portal\  # (Folder rename optional)
+C:\Projects\SM-Portal\  
 ```
 
 ## 🎯 What Is This?
