@@ -1,7 +1,8 @@
 # MOVEX-Portal - Directory Map
 
-**Generated**: 2026-02-09  
-**Purpose**: Quick navigation for developers and AI agents
+**Generated**: 2026-02-25  
+**Purpose**: Quick navigation for developers and AI agents  
+**Last Update**: Frontend implementation complete (Feb 25, 2026)
 
 ## 📁 Complete Directory Structure
 
@@ -12,6 +13,46 @@ C:\Projects\MOVEX-Portal\
 ├── 📄 README.md                     ← Project overview and setup
 ├── 📄 QUICK_REFERENCE.md            ← Quick commands and tips
 ├── 📄 DIRECTORY_MAP.md              ← This file
+│
+├── 📁 frontend/                     ← React 18 + TypeScript UI ✅ COMPLETE
+│   ├── 📄 package.json              ← Dependencies (React, Tailwind, Vite, Router)
+│   ├── 📄 tailwind.config.ts        ← Tailwind theme with custom design tokens
+│   ├── 📄 vite.config.ts            ← Vite build configuration
+│   │
+│   ├── 📁 src/
+│   │   ├── 📄 main.tsx              ← Entry point (BrowserRouter wrapper)
+│   │   ├── 📄 App.tsx               ← React Router setup + protected routes
+│   │   ├── 📄 index.css             ← Global styles (imports tokens.css)
+│   │   │
+│   │   ├── 📁 components/
+│   │   │   ├── 📁 ui/               ← Reusable UI components
+│   │   │   │   ├── 📄 input.tsx     ← Input, Textarea, Select with validation
+│   │   │   │   ├── 📄 button.tsx    ← Button (4 variants)
+│   │   │   │   ├── 📄 badge.tsx     ← Badge, BadgeGroup (6 variants)
+│   │   │   │   ├── 📄 tabs.tsx      ← Tab system (context-based)
+│   │   │   │   ├── 📄 spinner.tsx   ← Spinner, LoadingState, Skeleton
+│   │   │   │   ├── 📄 stats.tsx     ← StatsCard, StatsGrid
+│   │   │   │   ├── 📄 card.tsx      ← Card, CardHeaderStrip, CardBody
+│   │   │   │   ├── 📄 drawer.tsx    ← Drawer, DrawerContent, DrawerHeader (mobile nav)
+│   │   │   │   ├── 📄 alert.tsx     ← Alert component
+│   │   │   │   └── 📄 typography.tsx ← H1-H3, Display, Body, Caption, Code
+│   │   │   │
+│   │   │   └── 📄 ResponsiveHeader.tsx ← Smart header (hamburger mobile + nav desktop)
+│   │   │
+│   │   ├── 📁 pages/
+│   │   │   ├── 📄 SignIn.tsx        ← Windows AD auth page
+│   │   │   ├── 📄 WelcomePage.tsx   ← Home: role-based feature cards
+│   │   │   └── 📄 ComponentShowcase.tsx ← Interactive component demo (/components route)
+│   │   │
+│   │   ├── 📁 context/
+│   │   │   └── 📄 AuthContext.tsx   ← User auth state (Context API)
+│   │   │
+│   │   └── 📁 styles/
+│   │       ├── 📄 tokens.css        ← Design tokens (colors, spacing, typography, transitions)
+│   │       └── 📄 index.css         ← Global imports
+│   │
+│   ├── 📁 public/                   ← Static assets
+│   └── 📁 dist/                     ← Built output (generated)
 │
 ├── 📁 ai/                           ← AI agent context and guidelines
 │   ├── 📄 rules.md                  ← Development rules for AI agents
@@ -43,16 +84,16 @@ C:\Projects\MOVEX-Portal\
 │       ├── 📄 change-impact.md
 │       └── 📄 release-notes.md
 │
-├── 📁 src/                          ← MOVEX-Portal API (ASP.NET Core)
+├── 📁 src/                          ← MOVEX-Portal API (ASP.NET Core) 📋 PLANNED
 │   ├── 📁 Models/                   ← DTOs and domain models
 │   ├── 📁 Services/                 ← Skill implementations
 │   └── 📁 Middleware/               ← RBAC + audit middleware
 │
-├── 📁 config/                       ← Runtime configuration
+├── 📁 config/                       ← Runtime configuration 📋 PLANNED
 │   ├── 📄 endpoint-registry.json
 │   └── 📄 rbac-config.json
 │
-├── 📁 tests/                        ← Unit and integration tests
+├── 📁 tests/                        ← Unit and integration tests 📋 PLANNED
 │   ├── 📄 EndpointRegistryProviderTests.cs
 │   ├── 📄 EndpointDiscoveryServiceTests.cs
 │   ├── 📄 RbacServiceTests.cs
@@ -60,6 +101,7 @@ C:\Projects\MOVEX-Portal\
 │   └── 📄 GenericEndpointExecutorTests.cs
 │
 ├── 📁 docs/                         ← Documentation
+│   ├── 📄 FRONTEND_SETUP.md         ← Frontend development guide
 │   └── 📁 diagrams/                 ← Mermaid architecture diagrams
 │
 ├── 📁 .github/                      ← GitHub configuration (if using)
@@ -92,9 +134,23 @@ C:\Projects\MOVEX-Portal\
 | `tasks/sprint-backlog.md` | Current sprint tasks | ✓ Complete |
 | `evidence/decision-log.md` | Architecture decisions | ✓ Complete |
 
-### Source Code (`src/`)
+### Frontend (`frontend/`)
 
-All files in `src/` are **📋 Planned** for implementation in Q1 2026.
+| File | Purpose | Status |
+|------|---------|--------|
+| `package.json` | Dependencies & scripts | ✅ Complete |
+| `tailwind.config.ts` | Theme with design tokens | ✅ Complete |
+| `src/App.tsx` | React Router setup | ✅ Complete |
+| `src/main.tsx` | Entry point | ✅ Complete |
+| `src/components/ui/*` | Component library | ✅ Complete |
+| `src/pages/SignIn.tsx` | Auth page | ✅ Complete |
+| `src/pages/WelcomePage.tsx` | Home page | ✅ Complete |
+| `src/pages/ComponentShowcase.tsx` | Component demo | ✅ Complete |
+| `src/styles/tokens.css` | Design tokens | ✅ Complete |
+
+### Backend Source Code (`src/`)
+
+All files in `src/` (backend) are **📋 Planned** for implementation in Q1 2026.
 
 | Component | Purpose |
 |-----------|---------|
@@ -102,7 +158,6 @@ All files in `src/` are **📋 Planned** for implementation in Q1 2026.
 | **Services** | Business logic implementing centralized skills |
 | **Middleware** | Request pipeline (RBAC, audit) |
 | **Models** | DTOs and domain models |
-| **Pages** | Deprecated (legacy UI) |
 | **config** | JSON configuration files |
 
 ### Tests (`tests/`)

@@ -2,6 +2,8 @@
 
 **Print this and keep at your desk!** 📌
 
+**Version**: 0.2.0 | **Status**: ✅ Frontend Complete
+
 ## 📍 Location
 ```
 C:\Projects\MOVEX-Portal\
@@ -10,20 +12,43 @@ C:\Projects\MOVEX-Portal\
 ## 🎯 What Is This?
 Secure web portal exposing M3 MOVEX endpoints to internal users with RBAC, audit logging, and ISO 27001 compliance.
 
-## ✅ Skills Implemented
+## 🎨 Frontend Status (COMPLETE - Feb 25)
+
+✅ **Design System** - 8px spacing grid, semantic colors, fluid typography, transitions
+✅ **Component Library** - Input, Textarea, Select, Badge, Tabs, Spinner, Stats, Card, Drawer, Alert
+✅ **Responsive Pages** - SignIn, WelcomePage, ComponentShowcase (/components route)
+✅ **Mobile Navigation** - Hamburger menu (mobile) + desktop nav in ResponsiveHeader
+✅ **Touch Optimization** - 44px+ targets, 16px base font, responsive layouts
+
+## 📋 Backend Skills (Planned)
 
 ### Architecture (3 skills)
-- ✅ **rbac-endpoint-control** - Role-based access control for endpoint exposure
-- ✅ **audit-logging-framework** - ISO 27001-compliant audit logging
-- ✅ **generic-endpoint-executor** - Config-driven M3 endpoint execution
+- 📋 **rbac-endpoint-control** - Role-based access control for endpoint exposure
+- 📋 **audit-logging-framework** - ISO 27001-compliant audit logging
+- 📋 **generic-endpoint-executor** - Config-driven M3 endpoint execution
 
 ### Integration (2 skills - reused from movex-rest-api)
-- ✅ **m3-transaction-builder** - Build M3 API transaction configs
-- ✅ **m3-response-parser** - Parse M3 responses with type conversion
+- ✓ **m3-transaction-builder** - Build M3 API transaction configs
+- ✓ **m3-response-parser** - Parse M3 responses with type conversion
 
 ## 🚀 Quick Commands
 
-### View Skills Documentation
+### Frontend - Local Development
+```powershell
+cd C:\Projects\MOVEX-Portal\frontend
+npm install      # Install dependencies (first time)
+npm run dev     # Start dev server → http://localhost:5173
+npm run build   # Production build
+```
+
+### View Frontend Components
+```
+Once dev server running:
+- http://localhost:5173              ← SignIn/WelcomePage
+- http://localhost:5173/components   ← Interactive showcase
+```
+
+### View Backend Skills Documentation
 ```powershell
 # RBAC skill
 cat C:\Projects\.github\skills\architecture\rbac-endpoint-control\skill.md

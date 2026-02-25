@@ -1,14 +1,17 @@
 # MOVEX-Portal - Project Index
 
-**Version**: 0.1.0 (Pre-Alpha)  
-**Status**: 🚧 Under Development  
-**Last Updated**: 2026-02-09
+**Version**: 0.2.0 (Frontend MVP)  
+**Status**: ✅ Frontend Complete | 🚧 Backend Planned  
+**Last Updated**: 2026-02-25  
+**Frontend**: ✅ Design system, component library, mobile responsiveness
 
 ## 📍 Quick Navigation
 
 | Section | Description | Link |
 |---------|-------------|------|
 | **README** | Project overview and setup | [README.md](README.md) |
+| **Frontend Guide** | Component library, design system, responsive design | [frontend/README.md](frontend/README.md) |
+| **Component Showcase** | Interactive demo page (run dev server, visit /components) | `localhost:5173/components` |
 | **Product Vision** | Goals, users, roadmap | [ai/memory/00-product-vision.md](ai/memory/00-product-vision.md) |
 | **Manufacturing Context** | M3 MOVEX integration details | [ai/memory/01-manufacturing-context.md](ai/memory/01-manufacturing-context.md) |
 | **Style Guide** | Theme + palette (approved) | [context/design/style-guide.md](context/design/style-guide.md) |
