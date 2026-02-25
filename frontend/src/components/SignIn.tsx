@@ -27,7 +27,7 @@ export default function SignIn() {
         {/* Logo/Header */}
         <div className="text-center mb-lg md:mb-xl">
           <H1 className="text-primary m-0 mb-sm tracking-tight font-bold text-3xl md:text-4xl">
-            MOVEX Portal
+            SM-Portal
           </H1>
           <Body className="text-text-weak opacity-90 text-sm md:text-base">
             Secure access to M3 endpoints

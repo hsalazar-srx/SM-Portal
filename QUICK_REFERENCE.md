@@ -1,4 +1,4 @@
-# MOVEX-Portal - Quick Reference Card
+# SM-Portal (Scanfil Melbourne Portal) - Quick Reference Card
 
 **Print this and keep at your desk!** 📌
 
@@ -6,11 +6,11 @@
 
 ## 📍 Location
 ```
-C:\Projects\MOVEX-Portal\
+C:\Projects\MOVEX-Portal\  # (Folder rename optional)
 ```
 
 ## 🎯 What Is This?
-Secure web portal exposing M3 MOVEX endpoints to internal users with RBAC, audit logging, and ISO 27001 compliance.
+Scanfil Melbourne Portal (SM-Portal) - secure web portal exposing M3 MOVEX endpoints to internal users with RBAC, audit logging, and ISO 27001 compliance.
 
 ## 🎨 Frontend Status (COMPLETE - Feb 25)
 

@@ -1,4 +1,4 @@
-# MOVEX-Portal - Directory Map
+# SM-Portal (Scanfil Melbourne Portal) - Directory Map
 
 **Generated**: 2026-02-25  
 **Purpose**: Quick navigation for developers and AI agents  
@@ -7,7 +7,7 @@
 ## 📁 Complete Directory Structure
 
 ```
-C:\Projects\MOVEX-Portal\
+C:\Projects\MOVEX-Portal\  # (Folder may be renamed to SM-Portal)
 │
 ├── 📄 INDEX.md                      ← Start here! Project navigation hub
 ├── 📄 README.md                     ← Project overview and setup

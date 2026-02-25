@@ -1,4 +1,4 @@
-# MOVEX-Portal - Project Index
+# SM-Portal (Scanfil Melbourne Portal) - Project Index
 
 **Version**: 0.2.0 (Frontend MVP)  
 **Status**: ✅ Frontend Complete | 🚧 Backend Planned  
@@ -18,9 +18,9 @@
 | **AI Rules** | Agent guidelines and principles | [ai/rules.md](ai/rules.md) |
 | **Skills Registry** | Centralized capabilities | `C:\Projects\.github\skills\` |
 
-## 🎯 What Is MOVEX-Portal?
+## 🎯 What Is SM-Portal?
 
-A secure, user-friendly web portal that exposes selected M3 MOVEX API endpoints to internal users with:
+Scanfil Melbourne Portal (SM-Portal) - a secure, user-friendly web portal that exposes selected M3 MOVEX API endpoints to internal users with:
 
 - ✅ **Role-Based Access Control (RBAC)** - Windows AD integration
 - ✅ **Audit Logging** - ISO 27001 compliance
@@ -161,7 +161,7 @@ cd C:\Projects\MOVEX-Portal
 
 ### Phase 1: Foundation (Q1 2026)
 - ✅ Skills registry created
-- ✅ MOVEX-Portal project scaffolded
+- ✅ SM-Portal project scaffolded
 - ✅ System architecture documentation complete
 - 🔄 MVP: MMS175 endpoint exposure with RBAC + audit
 

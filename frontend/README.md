@@ -1,4 +1,4 @@
-# MOVEX-Portal Frontend
+# SM-Portal (Scanfil Melbourne Portal) Frontend
 
 **React 18 + TypeScript | Responsive Design System | Component Library**
 
@@ -8,7 +8,7 @@
 
 ## 🎯 Overview
 
-Modern, responsive frontend for MOVEX-Portal with:
+Modern, responsive frontend for SM-Portal (Scanfil Melbourne Portal) with:
 - ✅ Design system (8px spacing grid, semantic tokens, fluid typography)
 - ✅ Component library (10+ reusable components)
 - ✅ Mobile-first responsive design

@@ -1,4 +1,4 @@
-# MOVEX-Portal
+# SM-Portal (Scanfil Melbourne Portal)
 
 **Secure, User-Friendly Web Portal for M3 MOVEX Endpoint Exposure**
 
@@ -9,7 +9,7 @@
 
 ## 🎯 Overview
 
-MOVEX-Portal enables internal staff to safely interact with M3 MOVEX endpoints through a web interface, with role-based access control, comprehensive audit logging, and ISO 27001 compliance.
+Scanfil Melbourne Portal (SM-Portal) enables internal staff to safely interact with M3 MOVEX endpoints through a web interface, with role-based access control, comprehensive audit logging, and ISO 27001 compliance.
 
 ### Current Status (Feb 25, 2026)
 
@@ -80,10 +80,10 @@ This project implements **centralized skills** from `C:\Projects\.github\skills\
 └──────────────────────────┬──────────────────────────────────┘
                            │ HTTPS
 ┌──────────────────────────▼──────────────────────────────────┐
-│            MOVEX-Portal (SPA + Portal API)                  │
+│            SM-Portal (SPA + Portal API)                     │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │  Portal UI (React SPA)                               │   │
-│  │  - shadcn/ui + Tailwind CSS                          │   │
+│  │  - Custom design system + Tailwind CSS               │   │
 │  │  - Dynamic forms from metadata                       │   │
 │  │  - Role-based endpoint visibility                    │   │
 │  └──────────────────────────────────────────────────────┘   │
@@ -229,7 +229,7 @@ MOVEX-Portal/
 ### Phase 1: Foundation (Q1 2026) 🔄
 
 - [x] Skills registry created (3 architecture skills)
-- [x] MOVEX-Portal project scaffolding
+- [x] SM-Portal project scaffolding
 - [x] System architecture documentation
 - [x] [Architecture decision](ai/evidence/decision-001-react-spa-architecture.md): React SPA + ASP.NET API
 - [x] MVP: MMS175 endpoint with RBAC + audit (RBAC complete)
@@ -347,7 +347,7 @@ MOVEX-Portal/
 
 - **movex-rest-api**: `C:\Projects\MOVEX\API-Integration\movex-rest-api\`
   - Provides connection pool, transaction builder, response parser
-  - MOVEX-Portal extends this with RBAC and UI
+  - SM-Portal extends this with RBAC and UI
 
 - **Skills Registry**: `C:\Projects\.github\skills\`
   - Centralized capability definitions
