@@ -14,9 +14,26 @@ builder.Services.AddSwaggerGen(options =>
     options.SwaggerDoc("v1", new() { Title = "MOVEX Portal API", Version = "v1" });
 });
 
-// Windows Authentication for AD integration
-builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Negotiate.NegotiateDefaults.AuthenticationScheme)
-    .AddNegotiate();
+// Windows Authentication for AD integration.
+// IIS owns the Negotiate/NTLM handshake at kernel level — AddNegotiate() conflicts with it
+// and throws InvalidOperationException on startup. Use IISDefaults in production and
+// the Negotiate middleware only when self-hosting on Kestrel (development).
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddAuthentication(
+            Microsoft.AspNetCore.Authentication.Negotiate.NegotiateDefaults.AuthenticationScheme)
+        .AddNegotiate();
+}
+else
+{
+    // Defer entirely to IIS Windows Authentication.
+    // "Windows" is IISDefaults.AuthenticationScheme — using the literal avoids a
+    // compile-time dependency on Microsoft.AspNetCore.Server.IIS which is not
+    // guaranteed to be available on all build machines / SDK configurations.
+    // Requires: IIS site → Authentication → Windows Authentication = Enabled
+    //           IIS site → Authentication → Anonymous Authentication = Disabled
+    builder.Services.AddAuthentication("Windows");
+}
 
 builder.Services.AddAuthorization();
 
