@@ -1,0 +1,140 @@
+# =============================================================================
+# SM-Portal .gitignore
+# Stack: .NET 8.0 ASP.NET Core + React 18 + TypeScript + Vite + Tailwind
+# Platform: Windows / IIS / On-premises
+# Workspace: WORKSPACE_RULES.md — secrets never committed, logs are local
+# =============================================================================
+
+# =============================================================================
+# SECRETS & CREDENTIALS  (WORKSPACE_RULES.md — never commit secrets)
+# =============================================================================
+# User Secrets are stored in %APPDATA%\Microsoft\UserSecrets\ (outside repo)
+# but ignore any accidentally created local secret files
+secrets.json
+**/secrets.json
+*.pfx
+*.p12
+*.key
+*.pem
+*.cer
+*.crt
+
+# appsettings overrides that may contain local secrets
+appsettings.Local.json
+appsettings.Production.json
+appsettings.Staging.json
+
+# Environment files (frontend)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# =============================================================================
+# .NET BUILD ARTIFACTS
+# =============================================================================
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.csproj.user
+.vs/
+.vscode/
+*.ncb
+*.sap
+*.sdf
+*.opensdf
+ipch/
+*.aps
+*.cachefile
+*.VC.db
+*.VC.opendb
+
+# NuGet
+*.nupkg
+*.snupkg
+*.nuget.props
+*.nuget.targets
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Test results
+TestResults/
+*.trx
+*.coveragexml
+coverage/
+coverage.cobertura.xml
+coverage.opencover.xml
+
+# Publish output
+publish/
+PublishProfiles/
+*.pubxml
+!*.pubxml.user
+*.publishproj
+
+# =============================================================================
+# RUNTIME & OPERATIONAL LOGS  (WORKSPACE_RULES.md — logs are local, not source)
+# =============================================================================
+logs/
+*.log
+*.jsonl
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =============================================================================
+# FRONTEND — Node / Vite / React (mirrors frontend/.gitignore for root context)
+# =============================================================================
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+
+# =============================================================================
+# OS & EDITOR
+# =============================================================================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# VSCode (allow shared recommended extensions)
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# =============================================================================
+# IIS / DEPLOYMENT ARTIFACTS  (docs/IIS_DEPLOYMENT_RUNBOOK.md)
+# =============================================================================
+web.config.transform
+*.deploy.cmd
+*.SetParameters.xml
+*.zip
+
+# =============================================================================
+# KEEP TRACKED (explicit overrides)
+# =============================================================================
+# Config-driven endpoint registry and RBAC rules are source of truth
+!config/endpoint-registry.json
+!config/rbac-config.json
+
+# Base appsettings (no secrets — secrets go in User Secrets or Key Vault)
+!src/appsettings.json
+!src/appsettings.Development.json

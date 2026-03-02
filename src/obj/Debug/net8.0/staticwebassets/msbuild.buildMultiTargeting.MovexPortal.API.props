@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\build\MovexPortal.API.props" />
-</Project>
