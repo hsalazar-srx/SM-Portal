@@ -1,8 +1,8 @@
 # MOVEX-Portal - Deployment Guide
 
-**Last Updated**: 2026-02-04  
-**Status**: Phase 1 - Foundation  
-**Version**: 0.1.0 (Pre-Alpha)
+**Last Updated**: 2026-03-02
+**Status**: Active — v0.2.x deployed to SRXWEBAPP1
+**Version**: 0.2.x
 
 ## 🎯 Deployment Overview
 
@@ -98,14 +98,16 @@ This document outlines the deployment architecture, server configuration, and op
 C:\                           # System & Applications
 ├── inetpub\
 │   └── wwwroot\
-│       └── MOVEX-Portal\     # Application files
+│       └── SMPortal\
+│           ├── frontend\dist\  # React SPA static files (npm run build output)
+│           └── backend\        # .NET API (dotnet publish output)
 ├── Logs\
-│   └── MOVEX-Portal\         # Application logs
+│   └── SMPortal\               # IIS access logs
 └── Windows\
 
 D:\                           # Data & Backups
 ├── AppBackups\
-│   └── MOVEX-Portal\
+│   └── SMPortal\
 └── LogArchive\
 ```
 
@@ -113,9 +115,36 @@ D:\                           # Data & Backups
 
 ## 🔧 IIS Configuration
 
-### Application Pool Settings
+### Site Structure
 
-**Name**: `MOVEX-Portal`
+SM-Portal uses **two IIS applications under one website** — the frontend (static SPA) at
+the site root and the .NET API as a sub-application at `/api`. Each has its own app pool.
+
+```
+IIS Website: SM-Portal  (port 80, hostname: srxwebapp1.srxglobal.com)
+Physical root: C:\inetpub\wwwroot\SM-Portal-UI\        ← frontend dist/ contents deployed here
+App Pool:      SM-Portal-Frontend
+│
+└── Sub-application: /api
+    Physical root: C:\inetpub\wwwroot\SMPortal\backend\
+    App Pool:      SM-Portal-Backend
+```
+
+> The frontend and backend physical paths do not need to share a parent folder.
+> IIS maps URLs to physical paths independently — the `/api` sub-application
+> relationship is defined in IIS, not by folder nesting on disk.
+
+**Why two pools?**
+- Process isolation: backend crash/recycle does not drop static file serving
+- Independent recycling: deploy backend without interrupting frontend
+- Separate Windows identities if needed (backend needs AD/SQL access, frontend does not)
+- Separate performance counters and health monitoring
+
+---
+
+### App Pool: SM-Portal-Frontend
+
+Serves only static files — no managed runtime is loaded.
 
 ```ini
 [General]
@@ -126,135 +155,109 @@ Enable 32-Bit Applications   = False
 
 [Process Model]
 Identity                     = ApplicationPoolIdentity
+Load User Profile            = False        ← not needed for static files
 Idle Time-out (minutes)      = 20
 Maximum Worker Processes     = 1
-Ping Enabled                 = True
-Ping Maximum Response Time   = 90 seconds
 
 [Recycling]
-Regular Time Interval (minutes) = 1740 (29 hours - avoid daily patterns)
-Private Memory Limit (KB)       = 0 (disabled)
-Virtual Memory Limit (KB)       = 0 (disabled)
-Request Limit                   = 0 (disabled)
-
-[CPU]
-Limit (percentage)           = 0 (no limit)
-Limit Action                 = NoAction
-
-[Advanced]
-Rapid-Fail Protection Enabled = True
-Failure Interval (minutes)    = 5
-Maximum Failures              = 5
+Regular Time Interval (minutes) = 1740      ← 29 hours, avoids daily patterns
 ```
 
-### Website Configuration
+---
 
-**Name**: `MOVEX-Portal`
+### App Pool: SM-Portal-Backend
+
+Runs the ASP.NET Core in-process host. CLR version is "No Managed Code" because
+AspNetCoreModuleV2 loads the .NET runtime itself — setting a CLR version causes
+IIS to attempt loading two runtimes simultaneously.
 
 ```ini
-[Site Bindings]
-Protocol = https
-IP Address = * (All Unassigned)
-Port = 443
-Host Name = srxwebapp1.srxglobal.com
-SSL Certificate = srxwebapp1.srxglobal.com (SHA-256)
+[General]
+.NET CLR Version             = No Managed Code   ← mandatory for ASP.NET Core in-process
+Managed Pipeline Mode        = Integrated
+Start Mode                   = AlwaysRunning
+Enable 32-Bit Applications   = False
 
-[Physical Path]
-Path = C:\inetpub\wwwroot\MOVEX-Portal
+[Process Model]
+Identity                     = ApplicationPoolIdentity
+Load User Profile            = True              ← REQUIRED for Data Protection key persistence
+Idle Time-out (minutes)      = 20                  Without this, keys are ephemeral and all
+Maximum Worker Processes     = 1                   protected data (cookies, tokens) breaks
+                                                   on every app pool recycle.
+[Recycling]
+Regular Time Interval (minutes) = 1740
 
-[Application Pool]
-Application Pool = MOVEX-Portal
-
-[Authentication]
-Anonymous Authentication = Disabled
-Windows Authentication   = Enabled
-  - Providers: Negotiate, NTLM (in order)
-  - Extended Protection: Accept
-  - Kernel-mode authentication: Enabled
-
-[Authorization Rules]
-Allow = SRXGLOBAL\Domain Users
+[Rapid-Fail Protection]
+Enabled                      = True
+Failure Interval (minutes)   = 5
+Maximum Failures             = 5
 ```
 
-### Web.config (Auto-generated)
+---
 
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<configuration>
-  <location path="." inheritInChildApplications="false">
-    <system.webServer>
-      <!-- ASP.NET Core Module -->
-      <handlers>
-        <add name="aspNetCore" path="*" verb="*" 
-             modules="AspNetCoreModuleV2" 
-             resourceType="Unspecified" />
-      </handlers>
-      <aspNetCore processPath="dotnet" 
-                  arguments=".\Movex.Portal.dll" 
-                  stdoutLogEnabled="true" 
-                  stdoutLogFile=".\logs\stdout" 
-                  hostingModel="InProcess">
-        <environmentVariables>
-          <environmentVariable name="ASPNETCORE_ENVIRONMENT" value="Production" />
-        </environmentVariables>
-      </aspNetCore>
+### Website & Sub-application Authentication
 
-      <!-- Security Headers -->
-      <httpProtocol>
-        <customHeaders>
-          <add name="X-Content-Type-Options" value="nosniff" />
-          <add name="X-Frame-Options" value="DENY" />
-          <add name="X-XSS-Protection" value="1; mode=block" />
-          <add name="Strict-Transport-Security" value="max-age=31536000; includeSubDomains" />
-          <add name="Content-Security-Policy" 
-               value="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net code.jquery.com; style-src 'self' 'unsafe-inline' cdn.jsdelivr.net; font-src 'self' cdn.jsdelivr.net;" />
-          <remove name="X-Powered-By" />
-          <remove name="Server" />
-        </customHeaders>
-      </httpProtocol>
+Authentication is configured via `web.config` in each application's physical folder,
+not at the app pool level. The `inheritInChildApplications="false"` attribute on both
+`web.config` files prevents settings from leaking between the two applications.
 
-      <!-- IP Restrictions -->
-      <security>
-        <ipSecurity allowUnlisted="false">
-          <add ipAddress="192.168.1.0" subnetMask="255.255.255.0" allowed="true" />
-        </ipSecurity>
-        <authentication>
-          <windowsAuthentication enabled="true">
-            <providers>
-              <add value="Negotiate" />
-              <add value="NTLM" />
-            </providers>
-          </windowsAuthentication>
-          <anonymousAuthentication enabled="false" />
-        </authentication>
-      </security>
+| Application | Anonymous Auth | Windows Auth | Managed by |
+|-------------|---------------|--------------|------------|
+| `/` (frontend static) | **Enabled** | Disabled | `frontend/public/web.config` |
+| `/api` (backend) | Disabled | **Enabled** | `src/web.config` |
 
-      <!-- URL Rewrite (HTTPS enforcement) -->
-      <rewrite>
-        <rules>
-          <rule name="HTTPS Redirect" stopProcessing="true">
-            <match url="(.*)" />
-            <conditions>
-              <add input="{HTTPS}" pattern="off" />
-            </conditions>
-            <action type="Redirect" url="https://{HTTP_HOST}/{R:1}" redirectType="Permanent" />
-          </rule>
-        </rules>
-      </rewrite>
+---
 
-      <!-- Request Filtering -->
-      <security>
-        <requestFiltering>
-          <requestLimits maxAllowedContentLength="10485760" /> <!-- 10 MB -->
-          <verbs>
-            <add verb="TRACE" allowed="false" />
-            <add verb="OPTIONS" allowed="false" />
-          </verbs>
-        </requestFiltering>
-      </security>
-    </system.webServer>
-  </location>
-</configuration>
+### web.config Files
+
+**Frontend** (`frontend/public/web.config` → deployed to `dist/web.config`):
+- Serves static files only (`StaticFileModule`, no AspNetCoreModuleV2)
+- URL Rewrite SPA fallback: all non-file/non-`/api` requests → `index.html`
+- `inheritInChildApplications="false"` prevents `/api` from inheriting anonymous auth
+- Requires **IIS URL Rewrite Module** installed on SRXWEBAPP1
+
+**Backend** (`src/web.config` → deployed to `backend/web.config`):
+- `processPath=".\MovexPortal.API.exe"`, `hostingModel="inprocess"`
+- `stdoutLogEnabled="false"` — enable temporarily for crash diagnosis only
+- `ASPNETCORE_ENVIRONMENT=Production` fallback (prefer setting at app pool level)
+- `<remove name="aspNetCore" />` before `<add>` — prevents duplicate handler error
+  when the server-level `applicationHost.config` already registers the handler
+
+---
+
+### Auth Scheme Selection (Program.cs)
+
+The backend detects its host at startup using the `APP_POOL_ID` environment variable,
+which IIS injects into every w3wp.exe worker process. Kestrel never sets it.
+
+```
+APP_POOL_ID present → running on IIS → AddAuthentication("Windows")
+APP_POOL_ID absent  → running on Kestrel → AddAuthentication(Negotiate).AddNegotiate()
+```
+
+This is environment-name-independent — works correctly even if `ASPNETCORE_ENVIRONMENT`
+is misconfigured or not set.
+
+---
+
+### Deploy File Layout
+
+The two applications live in separate folders — they do not need to be nested.
+
+```
+C:\inetpub\wwwroot\SM-Portal-UI\       ← IIS website physical root (SM-Portal-Frontend pool)
+├── index.html                          ← output of: npm run build  (frontend/dist/)
+├── assets\
+└── web.config                          ← SPA fallback + static file config (frontend/public/web.config)
+
+C:\inetpub\wwwroot\SMPortal\backend\   ← /api sub-application physical root (SM-Portal-Backend pool)
+├── MovexPortal.API.exe                 ← output of: dotnet publish -c Release
+├── MovexPortal.API.dll
+├── web.config                          ← ASP.NET Core IIS config (src/web.config)
+├── config\
+│   ├── endpoint-registry.json
+│   └── rbac-config.json
+└── logs\                               ← created at runtime
 ```
 
 ---

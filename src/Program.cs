@@ -79,15 +79,28 @@ builder.Services.AddScoped<IEndpointDiscoveryService, EndpointDiscoveryService>(
 // Implements: architecture/generic-endpoint-executor
 builder.Services.AddScoped<IGenericEndpointExecutor, GenericEndpointExecutor>();
 
-// CORS for frontend SPA
+// CORS for frontend SPA.
+// In production the frontend is served as static files from the same IIS site,
+// so the frontend and API share the same origin — CORS is not required.
+// In development the Vite dev server runs on a different port, so CORS is needed.
+// Frontend:Url is set in appsettings.Development.json; it is empty in base config.
+var frontendUrl = builder.Configuration["Frontend:Url"] ?? "";
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins(builder.Configuration["Frontend:Url"] ?? "http://localhost:5173")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        if (!string.IsNullOrEmpty(frontendUrl))
+        {
+            policy.WithOrigins(frontendUrl)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        }
+        else
+        {
+            // Same-origin (production): CORS middleware is a no-op.
+            policy.SetIsOriginAllowed(_ => false);
+        }
     });
 });
 
