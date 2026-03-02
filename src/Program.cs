@@ -15,32 +15,49 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 // Windows Authentication for AD integration.
-// IIS owns the Negotiate/NTLM handshake at kernel level — AddNegotiate() conflicts with it
-// and throws InvalidOperationException on startup. Use IISDefaults in production and
-// the Negotiate middleware only when self-hosting on Kestrel (development).
-if (builder.Environment.IsDevelopment())
+//
+// The auth scheme must follow the ACTUAL SERVER, not the environment name:
+//   - IIS in-process: IIS owns the Negotiate/NTLM handshake at kernel level.
+//     AddNegotiate() conflicts with it and throws InvalidOperationException on startup.
+//     Register "Windows" (IISDefaults.AuthenticationScheme) so ASP.NET Core defers
+//     to the identity IIS already resolved.
+//   - Kestrel (local dev, CI, staging without IIS): IIS is not present, so the
+//     Negotiate middleware must handle the handshake itself via AddNegotiate().
+//
+// APP_POOL_ID is injected by IIS into w3wp.exe at startup and is never present
+// in a Kestrel process, making it the most reliable discriminator regardless of
+// what ASPNETCORE_ENVIRONMENT is set to.
+var hostedOnIIS = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APP_POOL_ID"));
+
+if (hostedOnIIS)
 {
-    builder.Services.AddAuthentication(
-            Microsoft.AspNetCore.Authentication.Negotiate.NegotiateDefaults.AuthenticationScheme)
-        .AddNegotiate();
+    // IIS manages the Windows auth handshake — defer to it.
+    // Requires: IIS site → Authentication → Windows Authentication = Enabled
+    //           IIS site → Authentication → Anonymous Authentication = Disabled
+    //           (enforced in web.config <security> block)
+    builder.Services.AddAuthentication("Windows");
 }
 else
 {
-    // Defer entirely to IIS Windows Authentication.
-    // "Windows" is IISDefaults.AuthenticationScheme — using the literal avoids a
-    // compile-time dependency on Microsoft.AspNetCore.Server.IIS which is not
-    // guaranteed to be available on all build machines / SDK configurations.
-    // Requires: IIS site → Authentication → Windows Authentication = Enabled
-    //           IIS site → Authentication → Anonymous Authentication = Disabled
-    builder.Services.AddAuthentication("Windows");
+    // Kestrel: run the Negotiate middleware to handle NTLM/Kerberos directly.
+    builder.Services.AddAuthentication(
+            Microsoft.AspNetCore.Authentication.Negotiate.NegotiateDefaults.AuthenticationScheme)
+        .AddNegotiate();
 }
 
 builder.Services.AddAuthorization();
 
 
+// Resolve a config-supplied path against AppContext.BaseDirectory so that relative
+// paths work correctly under both Kestrel (dev) and IIS in-process (production).
+// Path.GetFullPath is a no-op when the configured value is already absolute.
+static string ResolvePath(string? configured, string relativeFallback) =>
+    Path.GetFullPath(configured ?? relativeFallback, AppContext.BaseDirectory);
+
 // Register RBAC config provider
-var rbacConfigPath = builder.Configuration["Rbac:ConfigPath"]
-    ?? Path.Combine(AppContext.BaseDirectory, "config", "rbac-config.json");
+var rbacConfigPath = ResolvePath(
+    builder.Configuration["Rbac:ConfigPath"],
+    Path.Combine("config", "rbac-config.json"));
 builder.Services.AddSingleton<IRbacConfigProvider>(sp => new RbacConfigProvider(rbacConfigPath));
 // Register RBAC service with config provider
 builder.Services.AddSingleton<IRbacService, RbacService>(sp =>
@@ -51,8 +68,9 @@ var auditLogPath = builder.Configuration["Audit:LogPath"];
 builder.Services.AddSingleton<IAuditService>(sp => new AuditService(auditLogPath));
 
 // Implements: architecture/endpoint-registry-provider
-var registryPath = builder.Configuration["Endpoints:RegistryPath"] 
-    ?? Path.Combine(AppContext.BaseDirectory, "config", "endpoint-registry.json");
+var registryPath = ResolvePath(
+    builder.Configuration["Endpoints:RegistryPath"],
+    Path.Combine("config", "endpoint-registry.json"));
 builder.Services.AddSingleton<IEndpointRegistryProvider>(sp => new EndpointRegistryProvider(registryPath));
 
 // Implements: architecture/endpoint-discovery-service
