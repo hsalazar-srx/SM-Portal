@@ -1,6 +1,8 @@
 using MovexPortal.Middleware;
 using MovexPortal.Services;
 using Microsoft.AspNetCore.Authentication;
+using Polly;
+using Polly.Extensions.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -78,6 +80,23 @@ builder.Services.AddScoped<IEndpointDiscoveryService, EndpointDiscoveryService>(
 
 // Implements: architecture/generic-endpoint-executor
 builder.Services.AddScoped<IGenericEndpointExecutor, GenericEndpointExecutor>();
+
+// MyInvois.Api internal HTTP client (implements ADR-001 HTTP separation).
+// Polly: 3 retries with exponential back-off + circuit breaker after 5 failures (workspace rule).
+// API key from user-secrets: dotnet user-secrets set "MyInvoisApi:ApiKey" "<same as MyInvois.Api ApiKeys:Primary>"
+builder.Services.AddHttpClient<InvoiceApiClient>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["MyInvoisApi:BaseUrl"] ?? "http://localhost:5051/");
+    client.DefaultRequestHeaders.Add("X-API-Key",
+        builder.Configuration["MyInvoisApi:ApiKey"] ?? string.Empty);
+    client.Timeout = TimeSpan.FromSeconds(90); // DB2 query up to 60s + network margin
+})
+.AddPolicyHandler(HttpPolicyExtensions
+    .HandleTransientHttpError()
+    .WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt))))
+.AddPolicyHandler(HttpPolicyExtensions
+    .HandleTransientHttpError()
+    .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
 
 // CORS for frontend SPA.
 // In production the frontend is served as static files from the same IIS site,
