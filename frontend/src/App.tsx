@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import SignIn from './components/SignIn';
 import WelcomePage from './components/WelcomePage';
 import ComponentShowcase from './components/ComponentShowcase';
+import InvoicesPage from './components/InvoicesPage';
 
 export default function App() {
   const { user, isLoading } = useAuth();
@@ -31,6 +32,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<WelcomePage />} />
       <Route path="/components" element={<ComponentShowcase />} />
+      <Route path="/invoices" element={<InvoicesPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

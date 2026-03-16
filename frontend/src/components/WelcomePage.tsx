@@ -1,4 +1,5 @@
 import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import ResponsiveHeader from '@/components/ResponsiveHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeaderStrip, CardBody } from '@/components/ui/card';
@@ -7,13 +8,14 @@ import { H2, Display, Body, Muted, Code, Caption } from '@/components/ui/typogra
 
 export default function WelcomePage() {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   if (!user) {
     return null; // Should not reach here if redirected properly
   }
 
   const firstName = user.displayName.split(' ')[0];
-  const hasAdminRole = user.roles.some(r => 
+  const hasAdminRole = user.roles.some(r =>
     r.toLowerCase().includes('admin')
   );
 
@@ -21,7 +23,7 @@ export default function WelcomePage() {
     <div className="min-h-screen bg-bg text-text flex flex-col">
       {/* Responsive Header */}
       <ResponsiveHeader
-        title="Scanfil Melbourne Portal"
+        title="Scanfil APAC Portal"
         subtitle="Secure M3 Endpoint Access"
         userName={user.displayName}
         onSignOut={signOut}
@@ -79,55 +81,73 @@ export default function WelcomePage() {
           <div className="max-w-7xl mx-auto">
             <H2 className="mb-md md:mb-lg">Available Features</H2>
             <div className="grid gap-md md:gap-lg md:grid-cols-2 lg:grid-cols-3 auto-rows-max">
-              {[
+              {([
                 {
                   title: 'Endpoint Discovery',
                   desc: 'Browse M3 MOVEX endpoints available to your roles',
                   icon: '🔍',
+                  path: undefined as string | undefined,
+                  disabled: false,
                 },
                 {
                   title: 'Execute Transactions',
                   desc: 'Run approved M3 transactions with audit logging',
                   icon: '⚙️',
+                  path: undefined,
+                  disabled: false,
                 },
                 {
                   title: 'Execution History',
                   desc: 'View audit trail and transaction results',
                   icon: '📋',
+                  path: undefined,
+                  disabled: false,
+                },
+                {
+                  title: 'Invoice Extract',
+                  desc: 'View AP and AR invoices from MOVEX DB2',
+                  icon: '🧾',
+                  path: '/invoices',
+                  disabled: false,
                 },
                 {
                   title: 'Role Management',
                   desc: 'Manage RBAC permissions (Admin only)',
                   icon: '👥',
+                  path: undefined,
                   disabled: !hasAdminRole,
                 },
                 {
                   title: 'Configuration',
                   desc: 'Manage endpoint registry (Admin only)',
                   icon: '⚙️',
+                  path: undefined,
                   disabled: !hasAdminRole,
                 },
                 {
                   title: 'Audit Dashboard',
                   desc: 'View compliance and audit metrics',
                   icon: '📊',
+                  path: undefined,
+                  disabled: false,
                 },
-              ].map((feature, i) => (
-                <Card 
-                  key={i} 
+              ] as const).map((feature, i) => (
+                <Card
+                  key={i}
                   className={`transition-all duration-normal hover:shadow-md ${
                     feature.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary-200'
                   }`}
                 >
-                  <CardHeaderStrip 
+                  <CardHeaderStrip
                     title={`${feature.icon} ${feature.title}`}
                   />
                   <CardBody className="space-y-md">
                     <Body className="text-text-weak">
                       {feature.desc}
                     </Body>
-                    <Button 
-                      disabled={feature.disabled}
+                    <Button
+                      disabled={feature.disabled || !feature.path}
+                      onClick={() => feature.path && navigate(feature.path)}
                       className="w-full transition-all duration-normal"
                     >
                       Access

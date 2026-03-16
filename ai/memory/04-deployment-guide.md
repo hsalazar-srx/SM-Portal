@@ -767,6 +767,88 @@ Add-MpPreference -ExclusionPath "C:\Program Files\dotnet"
 
 ---
 
-**Document Status**: ✅ Complete  
-**Next Review**: Pre-deployment (Phase 1 MVP)  
+**Document Status**: ✅ Complete
+**Next Review**: Pre-deployment (Phase 1 MVP)
 **Owner**: IT Manager
+
+---
+
+## MyInvois.Api Dependency (Invoice Extract)
+
+**Last Updated**: 2026-03-11
+
+### Dependency Overview
+
+SM-Portal's Invoice Extract feature delegates all data access to **MyInvois.Api**, a separate
+ASP.NET Core service that runs as its own IIS site on port 5051. SM-Portal calls
+`GET http://localhost:5051/api/v1/invoices` via an `InvoiceApiClient` HTTP client registered in
+DI with Polly resilience (retries + circuit breaker).
+
+**SM-Portal does NOT hold DB2 credentials.** All IBM DB2 / AS400 access is encapsulated
+exclusively within MyInvois.Api. Do not configure `MovexDb:ConnectionString` in SM-Portal's
+secrets, appsettings, or environment variables — see the explicit prohibition below.
+
+```
+Browser
+  └─► SM-Portal /api/invoices  (Windows AD auth)
+        └─► MyInvois.Api :5051/api/v1/invoices  (API-key auth)
+              └─► IBM DB2 / AS400 (MVXCOBJ schema)
+```
+
+---
+
+### User Secret: SM-Portal Context
+
+The only secret SM-Portal needs for Invoice Extract is the API key that matches
+MyInvois.Api's configured primary key.
+
+```bash
+# Run from c:/Projects/SM-Portal/src/
+dotnet user-secrets set "MyInvoisApi:ApiKey" "<same value as MyInvois.Api ApiKeys:Primary>"
+```
+
+`MyInvoisApi:BaseUrl` defaults to `http://localhost:5051/` in `appsettings.json` and normally
+does not need to be overridden. Only change it if MyInvois.Api is deployed on a different host
+or port.
+
+---
+
+### Startup Order
+
+MyInvois.Api's IIS site **must be running** before SM-Portal begins serving invoice requests.
+If MyInvois.Api is unavailable at the time of a request, Polly will retry with exponential
+backoff and eventually open the circuit breaker. Users will see an error message during this
+window, but no data loss occurs — retries resume automatically when MyInvois.Api recovers.
+
+**Recommended startup sequence on SRXWEBAPP1:**
+
+1. Start (or verify running): IIS site **MyInvois.Api** (port 5051)
+2. Start: IIS site **SM-Portal** (port 80 / 443)
+
+---
+
+### End-to-End Verification
+
+After deploying both services, perform this smoke test from a browser logged in with a
+domain account:
+
+1. Navigate to `http://srxwebapp1.srxglobal.com/invoices`
+2. Enter a date range (e.g., last 30 days) and click **Load**
+3. Confirm the invoice table populates with rows
+4. Click **Export to Excel** and confirm the `.xlsx` file downloads correctly
+
+If the table is empty, widen the date range. If an error banner appears, check that
+MyInvois.Api is running and that the `MyInvoisApi:ApiKey` user-secret has been set.
+
+---
+
+### What NOT to Configure in SM-Portal
+
+| Setting | Must NOT appear in SM-Portal | Reason |
+|---------|------------------------------|--------|
+| `MovexDb:ConnectionString` | Any SM-Portal config, appsettings, or user-secrets | DB2 access is exclusively in MyInvois.Api |
+| `MyInvois:CertificateThumbprint` | Any SM-Portal config | LHDN certificate is MyInvois.Api concern only |
+| `MyInvois:TaxpayerTIN` | Any SM-Portal config | LHDN identity is MyInvois.Api concern only |
+
+Adding DB2 credentials to SM-Portal would violate the architectural boundary and expose
+AS400 credentials to the web-facing layer unnecessarily.
