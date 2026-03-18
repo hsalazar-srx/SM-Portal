@@ -35,7 +35,7 @@ class InvoiceService {
     toDate: string,
     type: InvoiceType
   ): Promise<InvoiceListResponse> {
-    const url = new URL(`${API_BASE}/api/invoices`);
+    const url = new URL(`${API_BASE}/invoices`, window.location.origin);
     url.searchParams.set('fromDate', fromDate);
     url.searchParams.set('toDate', toDate);
     url.searchParams.set('type', type);

@@ -16,7 +16,7 @@ class AuthService {
    */
   async testAuthentication(): Promise<AuthResponse> {
     try {
-      const res = await fetch(`${API_BASE}/api/auth/test`, {
+      const res = await fetch(`${API_BASE}/auth/test`, {
         method: 'GET',
         credentials: 'include', // Include Windows Auth cookies
       });
