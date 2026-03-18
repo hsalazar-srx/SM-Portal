@@ -13,7 +13,7 @@ namespace MovexPortal.Controllers;
 /// Authentication endpoint for verifying Windows AD credentials and user roles.
 /// </summary>
 [ApiController]
-[Route("api/auth")]
+[Route("auth")]
 public class AuthController : ControllerBase
 {
     /// <summary>

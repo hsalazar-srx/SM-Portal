@@ -13,7 +13,7 @@ namespace MovexPortal.Controllers;
 /// Route: GET /api/invoices?fromDate=yyyy-MM-dd&amp;toDate=yyyy-MM-dd&amp;type=AP|AR|ALL
 /// </summary>
 [ApiController]
-[Route("api/invoices")]
+[Route("invoices")]
 [Authorize]
 public class InvoicesController(
     InvoiceApiClient invoiceApiClient,

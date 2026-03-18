@@ -147,7 +147,7 @@ app.UseMiddleware<AuditLoggingMiddleware>();
 app.MapControllers();
 
 // DIAGNOSTIC: Check if Windows Auth is enabled
-app.MapGet("/api/debug/auth-schemes", (HttpContext context) =>
+app.MapGet("/debug/auth-schemes", (HttpContext context) =>
 {
     var schemes = context.RequestServices
         .GetRequiredService<IAuthenticationSchemeProvider>()
