@@ -20,7 +20,7 @@ namespace MovexPortal.Controllers;
 /// - GET /api/endpoints/{id} - Get endpoint definition
 /// </summary>
 [ApiController]
-[Route("api/endpoints")]
+[Route("endpoints")]
 [Authorize]
 public class EndpointController : ControllerBase
 {

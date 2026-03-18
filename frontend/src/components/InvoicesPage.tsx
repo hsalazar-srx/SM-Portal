@@ -59,7 +59,9 @@ export default function InvoicesPage() {
     setIsLoading(true);
     setCurrentPage(1);
     try {
+      console.log('Fetching invoices with filters:', { fromDate, toDate, invoiceType });
       const result = await invoiceService.getInvoices(fromDate, toDate, invoiceType);
+      console.log('Fetched invoices:', result);
       setItems(result.items);
       setTotalCount(result.totalCount);
       setHasLoaded(true);
@@ -87,7 +89,7 @@ export default function InvoicesPage() {
         subtitle="Invoice Extract"
         userName={user?.displayName}
         onSignOut={signOut}
-        showComponentsLink={false}
+        showComponentsLink={true}
       />
 
       <div className="flex-1 max-w-7xl mx-auto w-full px-md lg:px-lg py-lg space-y-lg">
