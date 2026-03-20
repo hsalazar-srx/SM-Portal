@@ -31,8 +31,9 @@
   - [ ] Or: Code uses `IHostEnvironment.ContentRootPath` (not hardcoded relative paths)
 
 - [ ] **Authentication correctly configured for environment**
-  - [ ] No `AddNegotiate()` in Production code (or guarded with `!app.Environment.IsProduction()`)
-  - [ ] IISDefaults used for Production auth
+  - [ ] `AddNegotiate()` is guarded by `APP_POOL_ID` env var detection — NOT called unconditionally
+        (IIS handles NTLM in-process; `AddNegotiate()` without guard causes `InvalidOperationException` at startup)
+  - [ ] IISDefaults used for Production auth: `AddAuthentication("Windows")`
   - [ ] Windows Auth enabled on IIS site (if using Windows Auth)
 
 ### Frontend Configuration
@@ -48,6 +49,39 @@
   # Verify in dist/index.html that API URL is correct (not localhost:5050)
   grep -o "localhost:5050" dist/index.html || echo "✅ No hardcoded localhost found"
   ```
+
+### IIS Sub-Application Route Audit ⚠️ CRITICAL (cloud/dev-prod-parity v1.0.0)
+
+Gaps invisible in development (Kestrel) that break in IIS. Run `@validator-iis-deploy` to automate.
+Reference: `ai/memory/06-deployment-lessons-learned.md` Issue #7 | Vault: `runbooks/iis-deployment.md` Issue 7
+
+- [ ] **Controller `[Route(...)]` attributes do NOT include the IIS sub-app path prefix**
+  ```powershell
+  # SM-Portal sub-app is /api — routes must NOT start with "api/"
+  Select-String -Path "src/Controllers/*Controller.cs" -Pattern 'Route\("api/'
+  # Should return NOTHING — any match is a FAIL
+  ```
+  Correct: `[Route("invoices")]` — Wrong: `[Route("api/invoices")]`
+
+- [ ] **All required API keys present in `appsettings.Production.json`**
+  Missing keys cause 502 Bad Gateway at runtime with no UI error:
+  - [ ] `MyInvoisApi:ApiKey` — required for invoice submission to port 5051
+  - [ ] `MyInvoisApi:BaseUrl` — `http://localhost:5051`
+  - [ ] Any connection strings that were in user-secrets during development
+
+- [ ] **IIS URL Rewrite Module installed** (required for SPA fallback — NOT bundled with IIS)
+  ```powershell
+  Get-WebGlobalModule -Name "RewriteModule" -ErrorAction SilentlyContinue
+  # Empty output = NOT installed → direct SPA navigation returns 404
+  ```
+
+- [ ] **App pool `loadUserProfile` = `true`** (required for Data Protection key persistence)
+  ```powershell
+  & "$env:windir\system32\inetsrv\appcmd.exe" list apppool "SMPortalPool" /text:* | findstr loadUserProfile
+  # Should show: loadUserProfile:"true"
+  ```
+
+---
 
 ### Secrets & Keys Management
 
@@ -364,6 +398,6 @@
 
 ---
 
-**Document Location**: `ai/checklists/pre-deployment-iis-validation.md`  
-**Last Updated**: 2026-03-02  
-**Version**: 1.0  
+**Document Location**: `ai/checklists/pre-deployment-iis-validation.md`
+**Last Updated**: 2026-03-19
+**Version**: 1.1 — Added IIS sub-app route audit section (cloud/dev-prod-parity v1.0.0) from incident 2026-03-19

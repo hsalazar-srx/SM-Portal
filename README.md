@@ -329,6 +329,7 @@ MOVEX-Portal/
 | [ai/memory/04-governance-and-decisions.md](ai/memory/04-governance-and-decisions.md) | Governance process | ✓ Complete |
 | [ai/memory/05-standards-security-quality.md](ai/memory/05-standards-security-quality.md) | Standards & security | ✓ Complete |
 | [ai/memory/06-known-risks-and-pitfalls.md](ai/memory/06-known-risks-and-pitfalls.md) | Risk register | ✓ Complete |
+| [ai/memory/06-deployment-lessons-learned.md](ai/memory/06-deployment-lessons-learned.md) | IIS deployment lessons (7 issues) | ✓ Complete |
 | [ai/memory/07-product-roadmap.md](ai/memory/07-product-roadmap.md) | Product roadmap | ✓ Complete |
 
 ### 🗺️ Diagrams
