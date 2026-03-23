@@ -59,9 +59,20 @@ Write-Host "Enter the secrets for this environment." -ForegroundColor Yellow
 Write-Host "Values are masked. Press Enter to keep existing value (if file already exists)."
 Write-Host ""
 
+function ConvertFrom-SecureStringToPlain([Security.SecureString]$secure) {
+    if (-not $secure) { return "" }
+    $ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
+    try {
+        return [Runtime.InteropServices.Marshal]::PtrToStringUni($ptr)
+    } finally {
+        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr)
+    }
+}
+
 function Read-SecretValue([string]$Prompt, [string]$ExistingValue = "") {
     $masked = if ($ExistingValue) { " [currently set — Enter to keep]" } else { " [required]" }
-    $input = Read-Host "$Prompt$masked"
+    $secureInput = Read-Host "$Prompt$masked" -AsSecureString
+    $input = ConvertFrom-SecureStringToPlain $secureInput
     if ([string]::IsNullOrWhiteSpace($input)) { return $ExistingValue }
     return $input.Trim()
 }

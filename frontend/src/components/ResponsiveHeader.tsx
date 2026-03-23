@@ -46,6 +46,7 @@ export default function ResponsiveHeader({
               </H3>
             ) : (
               <button
+                type="button"
                 onClick={() => handleNavigation('/')}
                 className="text-left group"
                 aria-label="Back to Portal home"
@@ -64,7 +65,7 @@ export default function ResponsiveHeader({
           <nav className="hidden md:flex items-center gap-md">
             {/* Back to Portal link — shown on all inner pages (not home, not /components which has its own toggle) */}
             {!isHomePage && !isComponentsPage && (
-              <button
+              <button type="button"
                 onClick={() => handleNavigation('/')}
                 className="text-sm text-primary hover:text-primary-700 underline transition-colors duration-normal"
               >
@@ -72,7 +73,7 @@ export default function ResponsiveHeader({
               </button>
             )}
             {showComponentsLink && (
-              <button
+              <button type="button"
                 onClick={() => handleNavigation(isComponentsPage ? '/' : '/components')}
                 className="text-sm text-primary hover:text-primary-700 underline transition-colors duration-normal"
               >
@@ -94,7 +95,7 @@ export default function ResponsiveHeader({
           </nav>
 
           {/* Mobile Menu Button */}
-          <button
+          <button type="button"
             onClick={() => setMobileMenuOpen(true)}
             className="md:hidden ml-2 p-sm hover:bg-surface rounded-md transition-colors duration-normal"
             aria-label="Open menu"
@@ -127,7 +128,8 @@ export default function ResponsiveHeader({
           <DrawerBody className="flex-1 space-y-md">
             {/* Back to Portal — shown on inner pages in mobile drawer */}
             {!isHomePage && !isComponentsPage && (
-              <button
+              <button 
+                type="button"
                 onClick={() => handleNavigation('/')}
                 className="w-full text-left px-md py-sm text-primary hover:bg-primary-50 rounded-md transition-colors duration-normal font-medium"
               >
@@ -135,7 +137,8 @@ export default function ResponsiveHeader({
               </button>
             )}
             {showComponentsLink && (
-              <button
+              <button 
+                type="button"
                 onClick={() => handleNavigation(isComponentsPage ? '/' : '/components')}
                 className="w-full text-left px-md py-sm text-primary hover:bg-primary-50 rounded-md transition-colors duration-normal font-medium"
               >

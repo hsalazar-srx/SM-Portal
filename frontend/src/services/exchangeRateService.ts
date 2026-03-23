@@ -27,7 +27,7 @@ class ExchangeRateService {
    */
   async getRate(currency: string, date: string): Promise<ExchangeRateResult | null> {
     const res = await fetch(
-      `${API_BASE}/api/exchange-rates/${encodeURIComponent(currency)}/${encodeURIComponent(date)}`,
+      `${API_BASE}/exchange-rates/${encodeURIComponent(currency)}/${encodeURIComponent(date)}`,
       {
         method: 'GET',
         credentials: 'include',   // Windows AD NTLM credential forwarding
