@@ -240,6 +240,82 @@ is misconfigured or not set.
 
 ---
 
+### IIS Sub-Application Routing — Controller Route Rules ⚠️ CRITICAL
+
+The SM-Portal backend runs as an IIS **sub-application** at path `/api` under the `SM-Portal`
+site. IIS routes all `http://server/api/*` requests to this sub-app and **strips the `/api`
+prefix** before ASP.NET Core receives the request.
+
+**What IIS does:**
+```
+Browser:        GET /api/invoices
+IIS sub-app:    strips /api  →  ASP.NET Core receives  GET /invoices
+IIS sub-app:    strips /api  →  ASP.NET Core receives  GET /auth/test
+```
+
+**Controller routes must NOT include the sub-app prefix:**
+```csharp
+// CORRECT — route is relative to sub-app root:
+[Route("invoices")]
+[Route("auth")]
+[Route("endpoints")]
+
+// WRONG — repeats sub-app prefix, never matches stripped path:
+[Route("api/invoices")]
+[Route("api/auth")]
+[Route("api/endpoints")]
+```
+
+**Why this doesn't break in development:** Kestrel has no sub-application concept.
+The browser calls `http://localhost:5050/api/invoices` and Kestrel receives the full path,
+so `[Route("api/invoices")]` matches. The mismatch is invisible until IIS deployment.
+
+**Diagnosis when routes return 404 in IIS:**
+```powershell
+# Confirm sub-app is registered and its path
+& "$env:windir\system32\inetsrv\appcmd.exe" list app /site.name:"SM-Portal" /text:*
+
+# Test — if auth handshake completes (NTLM 401→200) but still 404 → route mismatch
+curl.exe --negotiate -u : http://localhost/api/auth/test
+```
+
+**Tip — use `appcmd.exe` when `WebAdministration` module is unavailable:**
+```powershell
+# List all apps and their physical paths
+& "$env:windir\system32\inetsrv\appcmd.exe" list app
+
+# List app pool config (managedRuntimeVersion, loadUserProfile, etc.)
+& "$env:windir\system32\inetsrv\appcmd.exe" list apppool SMPortalPool /text:*
+```
+
+---
+
+### IIS Sub-Application Deployment — Required API Keys
+
+The backend calls downstream services using API keys. A missing key is silently absent until
+the first request hits that code path — returning 502 Bad Gateway with no other warning.
+
+**Required in `appsettings.Production.json` (or production user-secrets):**
+```json
+{
+  "MyInvoisApi": {
+    "BaseUrl": "http://localhost:5051/",
+    "ApiKey": "<same value as MyInvois.Api ApiKeys:Primary>"
+  }
+}
+```
+
+Set via user-secrets on the server (preferred over config file):
+```powershell
+cd C:\inetpub\wwwroot\SM-Portal
+dotnet user-secrets set "MyInvoisApi:ApiKey" "<key>"
+```
+
+A missing `MyInvoisApi:ApiKey` causes **502 Bad Gateway** on all `/api/invoices` requests.
+MyInvois.Api must be running on port 5051 before SM-Portal serves its first invoice request.
+
+---
+
 ### Deploy File Layout
 
 The two applications live in separate folders — they do not need to be nested.

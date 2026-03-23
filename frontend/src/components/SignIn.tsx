@@ -27,10 +27,10 @@ export default function SignIn() {
         {/* Logo/Header */}
         <div className="text-center mb-lg md:mb-xl">
           <H1 className="text-primary m-0 mb-sm tracking-tight font-bold text-3xl md:text-4xl">
-            SM-Portal
+            Scanfil APAC Portal
           </H1>
           <Body className="text-text-weak opacity-90 text-sm md:text-base">
-            Secure access to M3 endpoints
+            Enterprise Integration Gateway
           </Body>
         </div>
 
@@ -100,7 +100,7 @@ export default function SignIn() {
         {/* Support Footer */}
         <div className="mt-lg text-center">
           <Caption className="text-text-weak">
-            Need help? Contact <Code className="text-error">support@srx.com</Code>
+            Need help? Contact <Code className="text-error">itstaff_corp@srxglobal.com</Code>
           </Caption>
         </div>
       </div>

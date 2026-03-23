@@ -490,6 +490,64 @@ RISK: LOW (vs. HIGH - production down for hours)
 
 ---
 
-**Status**: COMPLETE  
-**Next Review**: 2026-06-01  
+---
+
+## Issue 7: IIS Sub-Application Controller Route Mismatch ⚠️ CRITICAL
+
+**Date**: 2026-03-19 | **Time Lost**: ~8 hours | **Sprint**: Invoice Extract UAT
+
+**Problem**: `GET /api/invoices` returned 404 after deployment to IIS even though
+authentication was working (NTLM handshake completing) and the app was running.
+
+**Root Cause**:
+- IIS sub-application is mounted at `/api` (SM-Portal/api in IIS Manager)
+- IIS strips the `/api` prefix and forwards `/invoices` to ASP.NET Core
+- Controllers had `[Route("api/invoices")]` — expecting the full path
+- ASP.NET Core received `/invoices` but tried to match `api/invoices` → no match → 404
+
+**Why it works in development but not in IIS**:
+- Dev (Kestrel): no sub-application concept — Kestrel receives full URL path including `/api/`
+- Prod (IIS sub-app): IIS strips `/api` before ASP.NET Core receives the request
+
+**Fix Applied**:
+```csharp
+// BEFORE (broken under IIS sub-app):
+[Route("api/invoices")]   // never matches — IIS already stripped /api
+[Route("api/auth")]
+[Route("api/endpoints")]
+
+// AFTER (correct):
+[Route("invoices")]
+[Route("auth")]
+[Route("endpoints")]
+```
+
+**Additional issues resolved in the same session**:
+
+| Issue | Root Cause | Fix |
+|-------|-----------|-----|
+| `Invalid URL` in browser | `new URL("/api/invoices")` — relative path without base | `new URL("/api/invoices", window.location.origin)` |
+| 502 Bad Gateway on /api/invoices | `MyInvoisApi:ApiKey` missing in production appsettings | Set key in appsettings.Production.json |
+| SPA direct-navigation 404 | IIS URL Rewrite Module not installed | Install from IIS downloads |
+| DLL file lock on deploy | Stopped wrong app pool | Use `appcmd.exe list app` to identify correct pool, then stop it |
+| PS `IIS:\` drive not found | `WebAdministration` module not auto-loaded | Use `appcmd.exe` instead |
+
+**Rule**:
+> The IIS sub-application path is an infrastructure concern — never repeat it in `[Route(...)]`.
+> Controller routes must reflect the path AFTER IIS strips the sub-app prefix.
+
+**Prevention Checklist**:
+- [ ] Audit all `[Route(...)]` — none should repeat the IIS sub-app path prefix
+- [ ] Smoke test `curl --negotiate -u : http://localhost/<subapp>/auth/test` post-deploy
+- [ ] All required API keys present in production config before first deployment
+- [ ] IIS URL Rewrite Module installed: `Get-WebGlobalModule -Name "RewriteModule"`
+- [ ] Stop correct app pool (`appcmd.exe list app`) before copying DLL
+- [ ] Frontend: `new URL(path, window.location.origin)` — never `new URL(relativePath)` alone
+
+**Related**: `ai/memory/06-deployment-lessons-learned.md` Issue #7 | Skill: `cloud/dev-prod-parity`
+
+---
+
+**Status**: ACTIVE — updated 2026-03-19
+**Next Review**: 2026-06-01
 **Owner**: DevOps & Development Team

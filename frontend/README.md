@@ -1,4 +1,4 @@
-# SM-Portal (Scanfil Melbourne Portal) Frontend
+# Scanfil APAC Portal Frontend
 
 **React 18 + TypeScript | Responsive Design System | Component Library**
 
@@ -8,7 +8,7 @@
 
 ## 🎯 Overview
 
-Modern, responsive frontend for SM-Portal (Scanfil Melbourne Portal) with:
+Modern, responsive frontend for Scanfil APAC Portal with:
 - ✅ Design system (8px spacing grid, semantic tokens, fluid typography)
 - ✅ Component library (10+ reusable components)
 - ✅ Mobile-first responsive design

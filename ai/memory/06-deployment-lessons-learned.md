@@ -259,6 +259,66 @@ See `.github/skills/manifest.json` for full skill definitions.
 
 ---
 
-**Next Review**: When deploying to new environments (staging, additional production servers)  
-**Owner**: DevOps Team  
-**Last Updated**: 2026-03-02
+**Next Review**: When deploying to new environments (staging, additional production servers)
+**Owner**: DevOps Team
+**Last Updated**: 2026-03-19
+
+---
+
+### Issue #7: IIS Sub-Application Controller Route Mismatch ⚠️ CRITICAL
+
+**Date**: 2026-03-19 | **Time Lost**: ~8 hours
+
+**Problem**: `GET /api/invoices` returned 404 after deployment to IIS even though
+authentication was working (NTLM handshake completing) and the app was running.
+
+**Root Cause**:
+- IIS sub-application is mounted at `/api` (SM-Portal/api in IIS Manager)
+- IIS strips the `/api` prefix and forwards `/invoices` to ASP.NET Core
+- Controllers had `[Route("api/invoices")]` — expecting the full path
+- ASP.NET Core received `/invoices` but tried to match `api/invoices` → no match → 404
+
+**Development vs Production gap**:
+- Dev (Kestrel, no sub-app): browser calls `http://localhost:5050/api/invoices`
+  → Kestrel receives full path → `[Route("api/invoices")]` matches ✅
+- Prod (IIS sub-app at `/api`): browser calls `http://server/api/invoices`
+  → IIS routes to sub-app, ASP.NET Core sees `GET /invoices`
+  → `[Route("api/invoices")]` does NOT match `/invoices` → 404 ❌
+
+**Fix Applied**:
+```csharp
+// BEFORE (broken in IIS sub-app):
+[Route("api/invoices")]
+[Route("api/auth")]
+[Route("api/endpoints")]
+
+// AFTER (correct for IIS sub-app):
+[Route("invoices")]
+[Route("auth")]
+[Route("endpoints")]
+```
+The `/api` segment is provided by the IIS sub-application path — do not repeat it in routes.
+
+**Also fixed in same session**:
+- `new URL("/api/invoices")` missing base argument → `Invalid URL` browser exception
+  Fix: `new URL("/api/invoices", window.location.origin)`
+- Missing `MyInvoisApi:ApiKey` in production appsettings → 502 Bad Gateway
+- IIS URL Rewrite Module not installed → SPA direct-navigation returned 404
+- `WebAdministration` PS module unavailable → use `appcmd.exe` instead
+- DLL file lock: stopped wrong app pool; use `appcmd.exe list app` to find correct one
+
+**Rule**:
+> When ASP.NET Core runs as an IIS sub-application, the sub-app path prefix is an
+> IIS concern — never repeat it in `[Route(...)]` attributes. Controller routes must
+> reflect the path AFTER IIS strips the prefix.
+
+**Prevention Checklist**:
+- [ ] All `[Route(...)]` attributes must NOT include the IIS sub-application prefix
+- [ ] Smoke test `GET /<subapp>/auth/test` from server immediately after deploy (`curl --negotiate`)
+- [ ] All required API keys (e.g., `MyInvoisApi:ApiKey`) present in production appsettings before first run
+- [ ] IIS URL Rewrite Module installed: `Get-WebGlobalModule -Name "RewriteModule"`
+- [ ] Use `appcmd.exe` to inspect IIS config when WebAdministration module unavailable
+- [ ] Stop the CORRECT app pool (verify with `appcmd.exe list app`) before replacing DLL
+- [ ] Frontend: `new URL(path, window.location.origin)` — never `new URL(relativePath)` alone
+
+**Related Skill**: `cloud/dev-prod-parity` v1.0.0
