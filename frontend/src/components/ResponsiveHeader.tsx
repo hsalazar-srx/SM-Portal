@@ -31,17 +31,31 @@ export default function ResponsiveHeader({
   };
 
   const isComponentsPage = location.pathname === '/components';
+  const isHomePage = location.pathname === '/';
 
   return (
     <>
       {/* Desktop & Mobile Header */}
       <header className="sticky top-0 z-sticky bg-bg border-b border-outline shadow-sm">
         <div className="max-w-7xl mx-auto px-md lg:px-lg h-16 flex items-center justify-between">
-          {/* Left: Title */}
+          {/* Left: Title — clickable on inner pages to return home */}
           <div className="flex-1">
-            <H3 className="text-primary m-0 tracking-tight font-bold text-lg md:text-xl">
-              {title}
-            </H3>
+            {isHomePage ? (
+              <H3 className="text-primary m-0 tracking-tight font-bold text-lg md:text-xl">
+                {title}
+              </H3>
+            ) : (
+              <button
+                type="button"
+                onClick={() => handleNavigation('/')}
+                className="text-left group"
+                aria-label="Back to Portal home"
+              >
+                <H3 className="text-primary m-0 tracking-tight font-bold text-lg md:text-xl group-hover:text-primary-700 transition-colors duration-normal">
+                  {title}
+                </H3>
+              </button>
+            )}
             {subtitle && (
               <Caption className="text-text-weak text-xs md:text-sm">{subtitle}</Caption>
             )}
@@ -49,8 +63,17 @@ export default function ResponsiveHeader({
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-md">
+            {/* Back to Portal link — shown on all inner pages (not home, not /components which has its own toggle) */}
+            {!isHomePage && !isComponentsPage && (
+              <button type="button"
+                onClick={() => handleNavigation('/')}
+                className="text-sm text-primary hover:text-primary-700 underline transition-colors duration-normal"
+              >
+                ← Portal
+              </button>
+            )}
             {showComponentsLink && (
-              <button
+              <button type="button"
                 onClick={() => handleNavigation(isComponentsPage ? '/' : '/components')}
                 className="text-sm text-primary hover:text-primary-700 underline transition-colors duration-normal"
               >
@@ -72,7 +95,7 @@ export default function ResponsiveHeader({
           </nav>
 
           {/* Mobile Menu Button */}
-          <button
+          <button type="button"
             onClick={() => setMobileMenuOpen(true)}
             className="md:hidden ml-2 p-sm hover:bg-surface rounded-md transition-colors duration-normal"
             aria-label="Open menu"
@@ -103,8 +126,19 @@ export default function ResponsiveHeader({
           </DrawerHeader>
 
           <DrawerBody className="flex-1 space-y-md">
+            {/* Back to Portal — shown on inner pages in mobile drawer */}
+            {!isHomePage && !isComponentsPage && (
+              <button 
+                type="button"
+                onClick={() => handleNavigation('/')}
+                className="w-full text-left px-md py-sm text-primary hover:bg-primary-50 rounded-md transition-colors duration-normal font-medium"
+              >
+                ← Back to Portal
+              </button>
+            )}
             {showComponentsLink && (
-              <button
+              <button 
+                type="button"
                 onClick={() => handleNavigation(isComponentsPage ? '/' : '/components')}
                 className="w-full text-left px-md py-sm text-primary hover:bg-primary-50 rounded-md transition-colors duration-normal font-medium"
               >

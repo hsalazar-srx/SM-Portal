@@ -1,8 +1,8 @@
-# MOVEX-Portal - Governance & Decisions
+# SM-Portal - Governance & Decisions
 
-**Last Updated**: 2026-02-09  
-**Status**: Draft  
-**Owner**: IT Manager  
+**Last Updated**: 2026-03-23
+**Status**: Active
+**Owner**: Architecture Team  
 
 ## 🧭 Governance Principles
 
@@ -30,8 +30,11 @@
 
 | ID | Decision | Status | Evidence |
 |----|---------|--------|----------|
-| 001 | Adopt React SPA (shadcn/ui + Tailwind CSS) | Proposed | `ai/evidence/decision-001-react-spa-architecture.md` |
-| 002 | Keep MOVEX-Portal API separate from movex-rest-api | Approved | `ai/evidence/decision-002-separate-portal-api.md` |
+| 001 | Adopt React SPA (shadcn/ui + Tailwind CSS) | Approved | `ai/evidence/decision-001-react-spa-architecture.md` |
+| 002 | Keep SM-Portal API separate from movex-rest-api | Approved | `ai/evidence/decision-002-separate-portal-api.md` |
+| 003 | Approve style guide & color palette | Approved | `ai/evidence/decision-003-style-guide-approval.md` |
+| 004 | Comparison of M365 alternatives vs custom portal | Approved | `ai/evidence/decision-004-comparison-m365-vs-custom-portal.md` |
+| 005 | Frontend-backend API path routing: configuration-only strategy | Approved | `ai/evidence/decision-005-frontend-backend-api-path-routing.md` |
 
 ---
 
@@ -65,10 +68,12 @@
 
 ## ✅ Next Steps
 
-1. Finalize Decision-001 approval
-2. Communicate Decision-002 in architecture diagrams
-3. Define release versioning scheme (v0.1.0 → v0.2.0)
-4. Populate release notes template
+1. ✅ API path routing documented (Decision-005)
+2. Finalize Decision-001 approval (React SPA architecture)
+3. Communicate Decision-002 in architecture diagrams
+4. Define release versioning scheme (v0.1.0 → v0.2.0)
+5. Populate release notes template
+6. Plan production migration strategy (subdomains, post-UAT phase)
 
 ---
 

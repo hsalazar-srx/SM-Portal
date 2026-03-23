@@ -30,9 +30,11 @@ public sealed class RbacMiddleware
         IRbacService rbacService,
         IAuditService auditService)
     {
-        // Skip RBAC check for auth/debug endpoints
-        if (context.Request.Path.StartsWithSegments("/api/auth") ||
-            context.Request.Path.StartsWithSegments("/api/debug") ||
+        // Skip RBAC check for auth/debug endpoints and read-only portal data endpoints.
+        // Note: paths here are AFTER UsePathBase strips /api — so use /auth not /api/auth.
+        if (context.Request.Path.StartsWithSegments("/auth") ||
+            context.Request.Path.StartsWithSegments("/debug") ||
+            context.Request.Path.StartsWithSegments("/exchange-rates") ||
             context.Request.Path.StartsWithSegments("/swagger"))
         {
             await _next(context).ConfigureAwait(false);

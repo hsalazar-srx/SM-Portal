@@ -8,6 +8,32 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.WebHost.UseUrls("http://localhost:5050");
 
+// ── Server secrets file (Production) ─────────────────────────────────────────
+// Stores API keys for downstream services (MyInvois-Service, Reporting-Service)
+// OUTSIDE the deployment folder so they survive every redeployment.
+// NTFS ACLs restrict read access to "IIS AppPool\smportal" only.
+//
+// Setup: Run scripts\Setup-ServerSecrets.ps1 on SRXWEBAPP1 as Administrator.
+// Default path: C:\ProgramData\SRX\SM-Portal\secrets.json
+// Override via SMPORTAL_SECRETS_PATH env var in web.config.
+//
+// Upgrade path: When Azure Key Vault is provisioned, swap this block for
+// AddAzureKeyVault() using the same key names (ADR-006).
+var secretsFilePath = builder.Configuration["SMPORTAL_SECRETS_PATH"]
+    ?? @"C:\ProgramData\SRX\SM-Portal\secrets.json";
+
+if (File.Exists(secretsFilePath))
+{
+    builder.Configuration.AddJsonFile(secretsFilePath, optional: false, reloadOnChange: false);
+}
+else if (!builder.Environment.IsDevelopment())
+{
+    // Startup warning — service will run with empty keys which will cause 401s from downstream APIs
+    Console.WriteLine(
+        $"[WARN] SM-Portal secrets file not found at {secretsFilePath}. " +
+        "Run scripts\\Setup-ServerSecrets.ps1 on SRXWEBAPP1.");
+}
+
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -56,6 +82,12 @@ builder.Services.AddAuthorization();
 static string ResolvePath(string? configured, string relativeFallback) =>
     Path.GetFullPath(configured ?? relativeFallback, AppContext.BaseDirectory);
 
+// Normalize base URLs: ensure trailing slash to prevent relative request path segment loss.
+// For example, "http://host/service" + "api/v1/..." without slash = "http://host/api/v1/..." (missing /service)
+// With trailing slash: "http://host/service/" + "api/v1/..." = "http://host/service/api/v1/..."
+static string EnsureTrailingSlash(string url) =>
+    url.EndsWith("/") ? url : url + "/";
+
 // Register RBAC config provider
 var rbacConfigPath = ResolvePath(
     builder.Configuration["Rbac:ConfigPath"],
@@ -86,7 +118,7 @@ builder.Services.AddScoped<IGenericEndpointExecutor, GenericEndpointExecutor>();
 // API key from user-secrets: dotnet user-secrets set "MyInvoisApi:ApiKey" "<same as MyInvois.Api ApiKeys:Primary>"
 builder.Services.AddHttpClient<InvoiceApiClient>(client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["MyInvoisApi:BaseUrl"] ?? "http://localhost:5051/");
+    client.BaseAddress = new Uri(EnsureTrailingSlash(builder.Configuration["MyInvoisApi:BaseUrl"] ?? "http://localhost:5051/"));
     client.DefaultRequestHeaders.Add("X-API-Key",
         builder.Configuration["MyInvoisApi:ApiKey"] ?? string.Empty);
     client.Timeout = TimeSpan.FromSeconds(90); // DB2 query up to 60s + network margin
@@ -97,6 +129,36 @@ builder.Services.AddHttpClient<InvoiceApiClient>(client =>
 .AddPolicyHandler(HttpPolicyExtensions
     .HandleTransientHttpError()
     .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
+
+// Reporting-Service HTTP client — exchange rate SPOT price proxy.
+// API key from user-secrets: dotnet user-secrets set "ReportingApi:ApiKey" "<Reporting-Service primary API key>"
+// BaseUrl in appsettings.Development.json for dev; actual prod URL via Setup-ServerSecrets.ps1.
+var reportingApiBaseUrl = builder.Configuration["ReportingApi:BaseUrl"];
+var reportingApiKey = builder.Configuration["ReportingApi:ApiKey"];
+
+// In non-development environments, fail fast if required ReportingApi configuration is missing.
+if (!builder.Environment.IsDevelopment())
+{
+    if (string.IsNullOrWhiteSpace(reportingApiBaseUrl) || string.IsNullOrWhiteSpace(reportingApiKey))
+    {
+        throw new InvalidOperationException("Missing required ReportingApi configuration (ReportingApi:BaseUrl and/or ReportingApi:ApiKey).");
+    }
+}
+
+builder.Services.AddHttpClient<ExchangeRateApiClient>(client =>
+{
+    // In development, fall back to localhost if BaseUrl is not configured.
+    var baseUrl = EnsureTrailingSlash(reportingApiBaseUrl ?? "http://localhost:5052/");
+    client.BaseAddress = new Uri(baseUrl);
+    client.DefaultRequestHeaders.Add("X-API-Key", reportingApiKey ?? string.Empty);
+    client.Timeout = TimeSpan.FromSeconds(15);
+})
+.AddPolicyHandler(HttpPolicyExtensions
+    .HandleTransientHttpError()
+    .WaitAndRetryAsync(2, attempt => TimeSpan.FromSeconds(attempt * 2)))
+.AddPolicyHandler(HttpPolicyExtensions
+    .HandleTransientHttpError()
+    .CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
 
 // CORS for frontend SPA.
 // In production the frontend is served as static files from the same IIS site,
@@ -124,6 +186,12 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Strip /api path base so Kestrel (dev) matches IIS virtual application path behaviour.
+// In IIS, the app lives at /api — requests arrive at ASP.NET Core with /api already stripped
+// by the IIS virtual directory. In Kestrel, UsePathBase replicates that, keeping routes
+// consistent across both environments (no api/ prefix in [Route] attributes needed).
+app.UsePathBase("/api");
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())

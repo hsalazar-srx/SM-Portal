@@ -13,6 +13,7 @@ import { StatsGrid } from '@/components/ui/stats';
 import { H2, Muted, Caption } from '@/components/ui/typography';
 import invoiceService, { InvoiceSummary, InvoiceType } from '@/services/invoiceService';
 import { exportInvoicesToExcel } from '@/utils/exportToExcel';
+import PageFooter from '@/components/PageFooter';
 
 const PAGE_SIZE = 25;
 
@@ -268,13 +269,7 @@ export default function InvoicesPage() {
         )}
       </div>
 
-      <footer className="bg-surface border-t border-outline w-full">
-        <div className="max-w-7xl mx-auto px-md lg:px-lg py-md">
-          <Caption className="text-text-weak text-xs">
-            © {new Date().getFullYear()} SRX Manufacturing · Invoice Extract · Data sourced from MOVEX DB2
-          </Caption>
-        </div>
-      </footer>
+      <PageFooter context="Invoice Extract · Data sourced from MOVEX DB2" />
     </div>
   );
 }
