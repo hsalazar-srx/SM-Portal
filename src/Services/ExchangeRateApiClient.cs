@@ -35,14 +35,15 @@ public class ExchangeRateApiClient(HttpClient httpClient, ILogger<ExchangeRateAp
             ?? Activity.Current?.Id
             ?? Guid.NewGuid().ToString();
 
-        httpClient.DefaultRequestHeaders.Remove("X-Correlation-Id");
-        httpClient.DefaultRequestHeaders.Add("X-Correlation-Id", cid);
-
         var url = $"api/v1/exchange-rates/{Uri.EscapeDataString(currency)}/{Uri.EscapeDataString(date)}";
+
+        using var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, url);
+        request.Headers.Add("X-Correlation-Id", cid);
+
         logger.LogInformation(
             "[ExchangeRateApiClient] GET {Url} correlationId={CorrelationId}", url, cid);
 
-        var response = await httpClient.GetAsync(url, ct);
+        using var response = await httpClient.SendAsync(request, ct);
 
         // 404 = no rate found within fallback window — return null (caller decides HTTP response)
         if (response.StatusCode == System.Net.HttpStatusCode.NotFound)

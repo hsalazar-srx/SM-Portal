@@ -72,8 +72,34 @@ public class ExchangeRatesController(
         }
         catch (HttpRequestException ex)
         {
+            if (ex.StatusCode.HasValue)
+            {
+                if ((int)ex.StatusCode >= 400 && (int)ex.StatusCode < 500)
+                {
+                    logger.LogError(ex,
+                        "[ExchangeRatesController] Auth/Config issue with Reporting-Service correlationId={CorrelationId} StatusCode={StatusCode}",
+                        correlationId, ex.StatusCode);
+                    return StatusCode(502, new
+                    {
+                        error         = "Exchange rate service configuration error. Contact support.",
+                        correlationId = correlationId
+                    });
+                }
+                else if ((int)ex.StatusCode >= 500)
+                {
+                    logger.LogError(ex,
+                        "[ExchangeRatesController] Reporting-Service error correlationId={CorrelationId} StatusCode={StatusCode}",
+                        correlationId, ex.StatusCode);
+                    return StatusCode(502, new
+                    {
+                        error         = "Exchange rate service encountered an error. Please try again shortly.",
+                        correlationId = correlationId
+                    });
+                }
+            }
+
             logger.LogError(ex,
-                "[ExchangeRatesController] Reporting-Service unreachable correlationId={CorrelationId}",
+                "[ExchangeRatesController] Reporting-Service connectivity failure correlationId={CorrelationId}",
                 correlationId);
             return StatusCode(502, new
             {

@@ -82,6 +82,12 @@ builder.Services.AddAuthorization();
 static string ResolvePath(string? configured, string relativeFallback) =>
     Path.GetFullPath(configured ?? relativeFallback, AppContext.BaseDirectory);
 
+// Normalize base URLs: ensure trailing slash to prevent relative request path segment loss.
+// For example, "http://host/service" + "api/v1/..." without slash = "http://host/api/v1/..." (missing /service)
+// With trailing slash: "http://host/service/" + "api/v1/..." = "http://host/service/api/v1/..."
+static string EnsureTrailingSlash(string url) =>
+    url.EndsWith("/") ? url : url + "/";
+
 // Register RBAC config provider
 var rbacConfigPath = ResolvePath(
     builder.Configuration["Rbac:ConfigPath"],
@@ -112,7 +118,7 @@ builder.Services.AddScoped<IGenericEndpointExecutor, GenericEndpointExecutor>();
 // API key from user-secrets: dotnet user-secrets set "MyInvoisApi:ApiKey" "<same as MyInvois.Api ApiKeys:Primary>"
 builder.Services.AddHttpClient<InvoiceApiClient>(client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["MyInvoisApi:BaseUrl"] ?? "http://localhost:5051/");
+    client.BaseAddress = new Uri(EnsureTrailingSlash(builder.Configuration["MyInvoisApi:BaseUrl"] ?? "http://localhost:5051/"));
     client.DefaultRequestHeaders.Add("X-API-Key",
         builder.Configuration["MyInvoisApi:ApiKey"] ?? string.Empty);
     client.Timeout = TimeSpan.FromSeconds(90); // DB2 query up to 60s + network margin
@@ -127,11 +133,24 @@ builder.Services.AddHttpClient<InvoiceApiClient>(client =>
 // Reporting-Service HTTP client — exchange rate SPOT price proxy.
 // API key from user-secrets: dotnet user-secrets set "ReportingApi:ApiKey" "<Reporting-Service primary API key>"
 // BaseUrl in appsettings.Development.json for dev; actual prod URL via Setup-ServerSecrets.ps1.
+var reportingApiBaseUrl = builder.Configuration["ReportingApi:BaseUrl"];
+var reportingApiKey = builder.Configuration["ReportingApi:ApiKey"];
+
+// In non-development environments, fail fast if required ReportingApi configuration is missing.
+if (!builder.Environment.IsDevelopment())
+{
+    if (string.IsNullOrWhiteSpace(reportingApiBaseUrl) || string.IsNullOrWhiteSpace(reportingApiKey))
+    {
+        throw new InvalidOperationException("Missing required ReportingApi configuration (ReportingApi:BaseUrl and/or ReportingApi:ApiKey).");
+    }
+}
+
 builder.Services.AddHttpClient<ExchangeRateApiClient>(client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["ReportingApi:BaseUrl"] ?? "http://localhost:5052/");
-    client.DefaultRequestHeaders.Add("X-API-Key",
-        builder.Configuration["ReportingApi:ApiKey"] ?? string.Empty);
+    // In development, fall back to localhost if BaseUrl is not configured.
+    var baseUrl = EnsureTrailingSlash(reportingApiBaseUrl ?? "http://localhost:5052/");
+    client.BaseAddress = new Uri(baseUrl);
+    client.DefaultRequestHeaders.Add("X-API-Key", reportingApiKey ?? string.Empty);
     client.Timeout = TimeSpan.FromSeconds(15);
 })
 .AddPolicyHandler(HttpPolicyExtensions
