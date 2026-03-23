@@ -1,148 +1,160 @@
-# SM-Portal (Scanfil Melbourne Portal)
+# Scanfil APAC Portal
 
-**Secure, User-Friendly Web Portal for M3 MOVEX Endpoint Exposure**
+**Enterprise Integration Gateway — Secure, Role-Based Access to All Scanfil APAC Technology Systems**
 
-[![Status](https://img.shields.io/badge/status-frontend%20mvp-green)]()
-[![Frontend](https://img.shields.io/badge/frontend-react%2B%20typescript-blue)]()
+[![Status](https://img.shields.io/badge/status-live%20phase%201-brightgreen)]()
+[![Frontend](https://img.shields.io/badge/frontend-react%2018%20%2B%20typescript-blue)]()
 [![.NET](https://img.shields.io/badge/.NET-8.0-blue)]()
+[![Deployment](https://img.shields.io/badge/deployment-SRXWEBAPP1%20IIS-green)]()
 [![License](https://img.shields.io/badge/license-proprietary-lightgrey)]()
-
-## 🎯 Overview
-
-Scanfil Melbourne Portal (SM-Portal) enables internal staff to safely interact with M3 MOVEX endpoints through a web interface, with role-based access control, comprehensive audit logging, and ISO 27001 compliance.
-
-### Current Status (Feb 25, 2026)
-
-✅ **Frontend MVP Complete**
-- Responsive design system with semantic tokens
-- Component library (10+ components)
-- Mobile-optimized UI with hamburger navigation
-- Interactive component showcase
-- Ready for backend integration
-
-🚧 **Backend Architecture** (Planned)
-- RBAC enforcement, audit logging, generic executor
-
-### Key Features
-
-- ✅ **Responsive UI** - Mobile-first design with desktop layouts (Implemented)
-- ✅ **Component Library** - Input, Badge, Tabs, Spinner, Stats, Card (Implemented)
-- ✅ **Design System** - 8px spacing grid, semantic colors, fluid typography (Implemented)
-- ✅ **Mobile Navigation** - Hamburger menu + responsive header (Implemented)
-- 📋 **Config-Driven** - Add endpoints via JSON, no code changes (Planned)
-- 📋 **RBAC Enforcement** - Windows AD integration for auth/authz (Planned)
-- 📋 **Audit Logging** - ISO 27001-compliant immutable audit trail (Planned)
-- 📋 **Dynamic UI** - Forms auto-generated from endpoint metadata (Planned)
-- 📋 **Generic Executor** - Single orchestrator for all M3 endpoints (Planned)
-- 📋 **Self-Service** - Business users execute approved operations without IT help (Planned)
-
-## 🏗️ Architecture
-
-### Workspace Standards Compliance
-
-**IMPORTANT:** This project MUST comply with **[WORKSPACE_RULES.md](../.github/WORKSPACE_RULES.md)**.
-
-**Key Requirements:**
-- ✅ Audit logs in **SQL Server** with standard schema (SRX_AuditLog)
-- ✅ **TLS 1.2+** for all connections (M3 API, database)
-- ✅ Connection strings in **User Secrets** (never hardcoded)
-- ✅ **ISO 27001** compliant audit trail (7-year retention)
-- ✅ Windows AD authentication/authorization (RBAC)
-- ✅ Encryption at rest (SQL Server TDE enabled)
-
-**Validation:** Run `../.github/scripts/validate-workspace-compliance.ps1` locally.
 
 ---
 
-### Skills-Based Design
+## Overview
 
-This project implements **centralized skills** from `C:\Projects\.github\skills\`:
+The Scanfil APAC Portal is the **single secure browser-based gateway** through which Scanfil APAC staff interact with all technology systems — ERP, compliance, financial data, reporting, and future integrations — without requiring technical expertise, direct system access, or custom tooling.
 
-| Skill | Category | Implementation Status |
-|-------|----------|---------------------|
-| **rbac-endpoint-control** | Architecture | ✅ Implemented |
-| **audit-logging-framework** | Architecture | 📋 Planned |
-| **generic-endpoint-executor** | Architecture | 📋 Planned |
-| **endpoint-registry-provider** | Architecture | ✅ Implemented |
-| **endpoint-discovery-service** | Architecture | ✅ Implemented |
-| **ui-ux-best-practices** | Architecture | ✅ Registered |
-| **m3-transaction-builder** | Integration | ✓ Reused from REST API |
-| **m3-response-parser** | Integration | ✓ Reused from REST API |
+Every system Scanfil APAC operates is a candidate integration. The portal provides a consistent, audited, RBAC-enforced interface regardless of the underlying system.
 
-📖 **See**: [Skills Registry](../.github/skills/) for detailed implementation patterns
+**Live on SRXWEBAPP1** — IIS deployment complete, production users active.
 
-### System Components
+---
+
+## Current Integrations (March 2026)
+
+| Integration | System | Portal Feature | Status |
+|---|---|---|---|
+| **M3 MOVEX** | Infor M3 ERP | `/endpoints` — generic executor | Framework live, socket adapter in progress |
+| **MyInvois-Service** | LHDN e-Invoicing | `/invoices` — AP/AR extract, Excel export | Live |
+| **Reporting-Service** | RBA / BI | `/exchange-rates` — daily SPOT rates | Live |
+| **Active Directory** | SRXGLOBAL.COM | Windows Auth + RBAC | Live |
+| **Audit Log** | ISO 27001 | All operations, risk-tiered retention | Live |
+
+---
+
+## Key Features
+
+| Feature | Status |
+|---|---|
+| Windows AD authentication (NTLM/Kerberos, transparent) | Live |
+| Role-based access control — AD groups → portal roles → endpoints | Live |
+| ISO 27001 audit trail — WHO/WHAT/WHEN/RESULT, immutable | Live |
+| LHDN invoice extract — AP/AR with date range, type filter, Excel export | Live |
+| RBA exchange rate lookup — SPOT rates with weekend/holiday fallback | Live |
+| Config-driven M3 endpoint executor (no code per new M3 operation) | Framework live |
+| React 18 + shadcn/ui + Tailwind CSS — modern, responsive UI | Live |
+| IIS deployment — frontend SPA + backend API, two pools | Live |
+| Polly resilience — retry + circuit breaker on all downstream calls | Live |
+
+**Coming Phase 2 (Q2 2026):** Reporting portal (Cost, Finance, Inventory reports), M3 socket adapter, execution dashboard, audit log viewer.
+
+---
+
+## Architecture
+
+The portal is a **gateway**, not a monolith. Each integration is a thin proxy controller with RBAC and audit logging applied uniformly. Adding a new system means adding a controller and a frontend page — existing integrations are never touched.
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     Internal Users                          │
-│               (Windows AD Authentication)                    │
-└──────────────────────────┬──────────────────────────────────┘
-                           │ HTTPS
-┌──────────────────────────▼──────────────────────────────────┐
-│            SM-Portal (SPA + Portal API)                     │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │  Portal UI (React SPA)                               │   │
-│  │  - Custom design system + Tailwind CSS               │   │
-│  │  - Dynamic forms from metadata                       │   │
-│  │  - Role-based endpoint visibility                    │   │
-│  └──────────────────────────────────────────────────────┘   │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │  Portal API Services                                 │   │
-│  │  - Generic Endpoint Executor                         │   │
-│  │  - RBAC authorization                                │   │
-│  │  - Field validation                                  │   │
-│  │  - Transaction orchestration                         │   │
-│  │  - Audit logging                                     │   │
-│  └──────────────────────────────────────────────────────┘   │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │  Middleware Layer                                    │   │
-│  │  - RBAC Enforcement                                  │   │
-│  │  - Audit Logger                                      │   │
-│  │  - Exception Handler                                │   │
-│  └──────────────────────────────────────────────────────┘   │
-└──────────────────────────┬──────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                  Scanfil APAC Staff (HTTPS)                      │
+└───────────────────────────┬──────────────────────────────────────┘
+                            │ NTLM/Kerberos
+┌───────────────────────────▼──────────────────────────────────────┐
+│               Scanfil APAC Portal (SRXWEBAPP1)                   │
+│                                                                  │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │  React SPA (IIS static pool)                            │    │
+│  │  Auth · Invoices · Exchange Rates · [Reports Phase 2]   │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │  Portal API (IIS inprocess pool)                        │    │
+│  │  RBAC Middleware → Controllers → Audit Logging          │    │
+│  │  Auth / Endpoints / Invoices / ExchangeRates            │    │
+│  └─────────────────────────────────────────────────────────┘    │
+└───────┬──────────────────┬──────────────────┬────────────────────┘
+        │                  │                  │
+┌───────▼──────┐  ┌────────▼──────────┐  ┌────▼──────────────────┐
+│ MOVEX        │  │ MyInvois-Service  │  │ Reporting-Service      │
+│ REST API     │  │ :5051             │  │ :5052                  │
+│ (M3 MI)      │  │ AP/AR invoices    │  │ RBA rates + reports    │
+└───────┬──────┘  └────────┬──────────┘  └────┬──────────────────┘
+        │                  │                  │
+        └──────────────────┴──────────────────┘
                            │
-┌──────────────────────────▼──────────────────────────────────┐
-│           movex-rest-api (Shared Components)                │
-│  - Connection Pool                                          │
-│  - Transaction String Builder                               │
-│  - M3 Response Parser                                       │
-└──────────────────────────┬──────────────────────────────────┘
-                           │ TCP/IP (MI Protocol)
-┌──────────────────────────▼──────────────────────────────────┐
-│              M3 MOVEX (IBM iSeries)                         │
-│  - MMS175MI (Item Movement)                                 │
-│  - MMS200MI (Item Lookup)                                   │
-│  - MMS310MI (Item Maintenance)                              │
-│  - MMS850MI (Production Orders)                             │
-└─────────────────────────────────────────────────────────────┘
+                   DB2 (AS400) / SQL Server
 ```
 
-## 🚀 Quick Start
+**Future integrations (WMS → Phase 3, MES → Phase 3, PLM → Phase 4)** follow the same pattern — one new box and one `Rel` at each level.
+
+---
+
+## Technology Stack
+
+| Concern | Technology |
+|---|---|
+| Runtime | .NET 8.0 ASP.NET Core |
+| Frontend | React 18 + TypeScript + shadcn/ui + Tailwind CSS |
+| Build tool | Vite |
+| Authentication | Windows Integrated Auth (IIS NTLM/Kerberos) |
+| Authorisation | Config-driven RBAC (AD groups → roles → endpoints) |
+| Resilience | Polly v8 (retry + circuit breaker on all HTTP clients) |
+| Logging | Serilog (structured JSON) + JSONL audit log |
+| Secrets | NTFS-protected `secrets.json` on SRXWEBAPP1 |
+| IIS | Two app pools: Frontend (static) + Backend (inprocess .NET 8) |
+
+---
+
+## Development Setup
 
 ### Prerequisites
 
 - .NET 8.0 SDK
-- Access to M3 MOVEX system (via movex-rest-api)
-- Windows Server with IIS (for deployment)
-- Active Directory (for user authentication)
-- SQL Server or Db2 (for audit log storage)
+- Node.js 18+ (for frontend)
+- IBM i ODBC driver (for M3 integration testing)
+- Windows AD account on SRXGLOBAL.COM domain (for Windows Auth)
 
-### Development Setup
+### Backend
 
 ```powershell
-# Navigate to project
-cd C:\Projects\MOVEX-Portal
+cd C:\Projects\SM-Portal
 
-# (Implementation underway - see roadmap below)
+# Configure user secrets
+cd src
+dotnet user-secrets set "MyInvoisApi:ApiKey" "your-key"
+dotnet user-secrets set "ReportingApi:ApiKey" "your-key"
+
+# Run backend (Kestrel dev server, Negotiate auth)
+dotnet run --project src/MovexPortal.csproj
+# API available at http://localhost:5050
+# Swagger at http://localhost:5050/swagger
 ```
 
-### Configuration
+### Frontend
 
-Portal behavior is driven by JSON configuration files:
+```powershell
+cd C:\Projects\SM-Portal\frontend
 
-**`config/endpoint-registry.json`** - Define exposed endpoints:
+npm install
+npm run dev
+# SPA at http://localhost:5173
+# Proxies /api calls to http://localhost:5050
+```
+
+### Test Authentication
+
+```
+GET http://localhost:5050/auth/test
+# Returns your Windows identity, AD groups, and mapped portal roles
+```
+
+---
+
+## Configuration
+
+### Endpoint Registry (`config/endpoint-registry.json`)
+
+Defines M3 endpoints available for execution. No code changes required — add a JSON entry.
+
 ```json
 {
   "endpoints": [
@@ -151,8 +163,9 @@ Portal behavior is driven by JSON configuration files:
       "program": "MMS175MI",
       "method": "Update",
       "displayName": "Item Movement",
-      "requiredRole": "MMS175_UPDATER",
+      "requiredRole": "Inventory_Write",
       "riskLevel": "HIGH",
+      "category": "Inventory",
       "fields": [
         { "name": "WHLO", "description": "Warehouse", "required": true, "maxLength": 3 },
         { "name": "ITNO", "description": "Item Number", "required": true, "maxLength": 15 },
@@ -165,214 +178,139 @@ Portal behavior is driven by JSON configuration files:
 }
 ```
 
-**`config/rbac-config.json`** - Map AD groups to roles:
+### RBAC Config (`config/rbac-config.json`)
+
+Maps AD groups to portal roles, and roles to allowed endpoints.
+
 ```json
 {
   "roles": [
     {
-      "name": "MMS175_UPDATER",
-      "adGroups": ["CN=Warehouse-Staff,OU=Users,DC=company,DC=com"],
-      "endpoints": ["MMS175MI/Update"]
-    },
-    {
-      "name": "MMS200_VIEWER",
-      "adGroups": ["CN=All-Staff,OU=Users,DC=company,DC=com"],
-      "endpoints": ["MMS200MI/GetItmBasic", "MMS200MI/LstItemsByGrp"]
+      "name": "Inventory_Write",
+      "adGroups": ["MOVEX-API-FIN"],
+      "allowedEndpoints": ["mms175-update"],
+      "maxRiskLevel": "HIGH"
     }
   ]
 }
 ```
 
-## 📋 Project Structure
+---
+
+## Project Structure
 
 ```
-MOVEX-Portal/
-├── ai/                         ← AI agent context
-│   ├── rules.md                ← Development guidelines
-│   ├── memory/                 ← Long-term knowledge base
-│   ├── planning/               ← Sprint planning
-│   ├── tasks/                  ← Task tracking
-│   └── evidence/               ← Decision logs, change impact
-├── src/                        ← Backend implementation (ASP.NET Core API)
-│   ├── Controllers/            ← HTTP endpoints
-│   ├── Services/               ← Business logic (skill implementations)
-│   │   ├── GenericEndpointExecutor.cs
-│   │   ├── EndpointRegistryProvider.cs
-│   │   ├── EndpointDiscoveryService.cs
-│   │   ├── RbacService.cs
-│   │   └── AuditService.cs
-│   ├── Middleware/             ← RBAC, audit logging
-│   │   ├── RbacMiddleware.cs
-│   │   └── AuditLoggingMiddleware.cs
-│   ├── Models/                 ← DTOs and domain models
-│   │   ├── EndpointRegistry.cs
-│   │   ├── EndpointDefinition.cs
-│   │   ├── EndpointField.cs
-│   │   ├── ExecutionResult.cs
-│   │   ├── UserContext.cs
-│   │   ├── AuditEvent.cs
-│   │   ├── RbacResult.cs
-│   │   └── RiskLevel.cs
-├── config/                     ← Runtime configuration (endpoint + RBAC)
-│   ├── endpoint-registry.json
-│   └── rbac-config.json
-├── frontend/                   ← React SPA (shadcn/ui + Tailwind) [Planned]
-├── tests/                      ← Unit and integration tests
-├── docs/                       ← Documentation
-│   └── diagrams/               ← Architecture diagrams
-├── INDEX.md                    ← Project navigation
-└── README.md                   ← This file
+SM-Portal/
+├── src/                        .NET 8 backend API
+│   ├── Controllers/            Auth · Endpoints · Invoices · ExchangeRates
+│   ├── Services/               Executor · RBAC · Registry · API clients
+│   ├── Middleware/             RbacMiddleware · AuditLoggingMiddleware
+│   ├── Models/                 DTOs and domain objects
+│   ├── Program.cs              Startup — auth strategy, HTTP clients, middleware
+│   ├── web.config              IIS InProcess hosting configuration
+│   └── appsettings.json        Base configuration
+├── frontend/                   React 18 + TypeScript + Vite
+│   ├── src/
+│   │   ├── components/         UI components (shadcn/ui + custom)
+│   │   ├── services/           API clients (auth · invoices · exchange rates)
+│   │   ├── context/            AuthContext (Windows AD session)
+│   │   └── App.tsx             Router and auth guard
+│   └── package.json
+├── config/                     Runtime JSON config (copied to publish output)
+│   ├── endpoint-registry.json  M3 endpoint definitions
+│   └── rbac-config.json        Role ↔ AD group mapping
+├── ai/
+│   ├── memory/                 Long-term knowledge base (read before making changes)
+│   │   ├── 00-product-vision.md
+│   │   ├── 02-system-architecture.md
+│   │   ├── 06-deployment-lessons-learned.md  ← read before any IIS deployment
+│   │   └── 07-product-roadmap.md
+│   ├── checklists/
+│   │   └── pre-deployment-iis-validation.md
+│   ├── evidence/               Decision logs, change impact records
+│   └── rules.md
+├── docs/                       Architecture diagrams, runbooks
+├── scripts/                    PowerShell setup scripts
+├── DEPLOYMENT_LESSONS_LEARNED.md
+└── README.md
 ```
 
-## 🎯 Roadmap
+---
 
-### Phase 1: Foundation (Q1 2026) 🔄
+## Deployment
 
-- [x] Skills registry created (3 architecture skills)
-- [x] SM-Portal project scaffolding
-- [x] System architecture documentation
-- [x] [Architecture decision](ai/evidence/decision-001-react-spa-architecture.md): React SPA + ASP.NET API
-- [x] MVP: MMS175 endpoint with RBAC + audit (RBAC complete)
+**Production and UAT share SRXWEBAPP1** — see [ai/memory/06-deployment-lessons-learned.md](ai/memory/06-deployment-lessons-learned.md) **before deploying** (7 issues, 8+ hours of hard-won experience).
 
-**Deliverables**:
-- Generic endpoint executor service
-- ✅ RBAC middleware with AD integration (complete)
-- Audit logging middleware
-- React SPA UI with shadcn/ui + Tailwind CSS
-- OpenAPI/Swagger documentation
+**Pre-deployment checklist:** [ai/checklists/pre-deployment-iis-validation.md](ai/checklists/pre-deployment-iis-validation.md) — 50 items.
 
-**Evidence & Decisions**:
-- [Decision Log 001](ai/evidence/decision-001-react-spa-architecture.md): Adopt React 18 + shadcn/ui + Tailwind CSS architecture
-- [Decision Log 002](ai/evidence/decision-002-separate-portal-api.md): Keep Portal API separate from movex-rest-api
-- [Change Impact 001](ai/evidence/change-impact-001-architecture-diagrams.md): Architecture diagrams updated
-- [Change Impact 002](ai/evidence/change-impact-002-shadcn-ui-adoption.md): Updated to shadcn/ui + Tailwind CSS
-- [Change Impact 003](ai/evidence/change-impact-003-skills-registry-and-stubs.md): Skills registry updates & stubs
-- [Change Impact 004](ai/evidence/change-impact-004-separate-portal-api.md): Separate Portal API decision
-- [Change Impact 005](ai/evidence/change-impact-005-middleware-and-config.md): Middleware + config placeholders
+| Environment | Auth | Swagger | Notes |
+|---|---|---|---|
+| Development | Negotiate (Kestrel) | Enabled (`localhost:5050/swagger`) | Uses dotnet user-secrets |
+| Production | Windows Auth (IIS) | Disabled | Uses NTFS `secrets.json` on SRXWEBAPP1 |
 
-### Phase 2: Enhancement (Q2 2026)
+**Critical deployment rules (from lessons learned):**
+1. Stop the **correct** app pool before copying files (`appcmd list app` first)
+2. `ASPNETCORE_CONTENTROOT=%APPL_PHYSICAL_PATH%` must be in `web.config`
+3. Do NOT set `ASPNETCORE_URLS` (Kestrel port conflict)
+4. `LoadUserProfile=true` on backend app pool (Data Protection key persistence)
+5. Controller routes must NOT include the `/api` sub-app prefix
+6. IIS URL Rewrite Module 2.1 must be installed
+7. `MyInvoisApi:ApiKey` and `ReportingApi:ApiKey` must be in `secrets.json` before startup
 
-- [ ] Enhanced UI features (dashboard, statistics)
-- [ ] Add 5+ endpoints (MMS200, MMS310, MMS850, etc.)
-- [ ] Execution statistics dashboard
-- [ ] IIS deployment to SRXWEBAPP1
+---
 
-**Deliverables**:
-- Production-ready portal
-- User onboarding documentation
-- Admin runbook
+## Security & Compliance
 
-### Phase 3: Advanced Features (Q3-Q4 2026)
+**Authentication:** Windows Integrated Auth — transparent NTLM/Kerberos, no password forms.
 
-- [ ] Approval workflows for high-risk operations
-- [ ] Batch operations (CSV upload)
-- [ ] Audit report generation UI
-- [ ] Self-service admin portal
+**Authorisation:** RBAC at middleware level — AD groups → portal roles → allowed endpoints.
+Every RBAC decision (grant and deny) is written to the audit log.
 
-## 🔒 Security & Compliance
+**Audit trail:** JSONL append-only log, WHO/WHAT/WHEN/RESULT, risk-tiered retention:
 
-### Security Model
+| Risk Level | Retention |
+|---|---|
+| CRITICAL | 7 years |
+| HIGH | 3 years |
+| MEDIUM | 1 year |
+| LOW | 90 days |
 
-- **Authentication**: Windows Integrated Auth (Active Directory)
-- **Authorization**: Role-Based Access Control (RBAC, fully implemented)
-  - Roles defined in config
-  - Mapped to AD groups
-  - Enforced at middleware level (tested)
-  - `/api/auth/test` endpoint exposes user/claim info for RBAC validation
-- **Network Security**: On-premises only, IP allow-list
-- **Data Protection**: Sensitive fields auto-masked in logs
-- **API Keys**: Scoped, expiring (for service accounts)
+**ISO 27001 controls:** A.9.2.1 (access control), A.9.4.1 (information access restriction), A.12.4.1 (event logging), A.12.4.3 (administrator logs), A.18.1.5 (regulation compliance).
 
-### ISO 27001 Compliance
+---
 
-| Control | Requirement | Implementation |
-|---------|-------------|----------------|
-| **A.12.4.1** | Event logging | All endpoint calls logged with WHO/WHAT/WHEN |
-| **A.12.4.3** | Admin activity | Admin operations tagged CRITICAL |
-| **A.12.4.4** | System monitoring | Execution statistics, anomaly detection |
-| **A.13.1.3** | Segregation of duties | Role-based access enforcement |
+## Roadmap
 
-### Audit Retention
+See [ai/memory/07-product-roadmap.md](ai/memory/07-product-roadmap.md) for the full roadmap.
 
-- **CRITICAL**: 7 years (financial transactions)
-- **HIGH**: 3 years (master data changes)
-- **MEDIUM**: 1 year (standard operations)
-- **LOW**: 90 days (read-only queries)
+| Phase | Timeframe | Key Deliverables |
+|---|---|---|
+| **Phase 1** (complete) | Q1 2026 | Auth, RBAC, invoice extract, exchange rates, IIS deployment |
+| **Phase 2** | Q2 2026 | M3 socket adapter live, reporting portal, dashboard, audit viewer |
+| **Phase 3** | Q3–Q4 2026 | WMS integration, MES integration, approval workflows, batch ops |
+| **Phase 4** | 2027+ | PLM, IoT, mobile app, executive dashboards |
 
-## 📖 Documentation
+---
 
-### 🎯 Evidence (Decisions & Change Impact)
-| Document | Purpose | Status |
-|----------|---------|--------|
-| [ai/evidence/decision-log.md](ai/evidence/decision-log.md) | Decision index | ✓ Complete |
-| [ai/evidence/decision-001-react-spa-architecture.md](ai/evidence/decision-001-react-spa-architecture.md) | React SPA decision | ✅ Approved |
-| [ai/evidence/decision-002-separate-portal-api.md](ai/evidence/decision-002-separate-portal-api.md) | Separate Portal API | ✅ Approved |
-| [ai/evidence/decision-003-style-guide-approval.md](ai/evidence/decision-003-style-guide-approval.md) | Style guide approval | ✅ Approved |
-| [ai/evidence/change-impact.md](ai/evidence/change-impact.md) | Change impact index | ✓ Complete |
-| [ai/evidence/change-impact-001-architecture-diagrams.md](ai/evidence/change-impact-001-architecture-diagrams.md) | Diagram updates | ✓ Complete |
-| [ai/evidence/change-impact-002-shadcn-ui-adoption.md](ai/evidence/change-impact-002-shadcn-ui-adoption.md) | shadcn/ui adoption | ✓ Complete |
-| [ai/evidence/change-impact-004-separate-portal-api.md](ai/evidence/change-impact-004-separate-portal-api.md) | Separate Portal API | ✓ Complete |
-| [ai/evidence/change-impact-005-middleware-and-config.md](ai/evidence/change-impact-005-middleware-and-config.md) | Middleware + config placeholders | ✓ Complete |
-| [ai/evidence/change-impact-006-style-guide-approval.md](ai/evidence/change-impact-006-style-guide-approval.md) | Style guide approval | ✓ Complete |
-| [ai/evidence/release-notes.md](ai/evidence/release-notes.md) | Release history | 📋 Planned |
+## Related Projects
 
-### 🧠 AI Memory (Long-Term Context)
-| Document | Purpose | Status |
-|----------|---------|--------|
-| [ai/memory/00-product-vision.md](ai/memory/00-product-vision.md) | Vision, goals, metrics | ✓ Complete |
-| [ai/memory/00-skills-audit.md](ai/memory/00-skills-audit.md) | Skills audit (mandatory) | ✓ Complete |
-| [ai/memory/01-manufacturing-context.md](ai/memory/01-manufacturing-context.md) | M3 MOVEX context | ✓ Complete |
-| [ai/memory/02-system-architecture.md](ai/memory/02-system-architecture.md) | System architecture | ✓ Complete |
-| [ai/memory/03-integration-contracts.md](ai/memory/03-integration-contracts.md) | Integration contracts | ✓ Complete |
-| [ai/memory/03-technology-stack.md](ai/memory/03-technology-stack.md) | Technology decisions | ✓ Complete |
-| [ai/memory/04-deployment-guide.md](ai/memory/04-deployment-guide.md) | Deployment procedures | ✓ Complete |
-| [ai/memory/04-governance-and-decisions.md](ai/memory/04-governance-and-decisions.md) | Governance process | ✓ Complete |
-| [ai/memory/05-standards-security-quality.md](ai/memory/05-standards-security-quality.md) | Standards & security | ✓ Complete |
-| [ai/memory/06-known-risks-and-pitfalls.md](ai/memory/06-known-risks-and-pitfalls.md) | Risk register | ✓ Complete |
-| [ai/memory/06-deployment-lessons-learned.md](ai/memory/06-deployment-lessons-learned.md) | IIS deployment lessons (7 issues) | ✓ Complete |
-| [ai/memory/07-product-roadmap.md](ai/memory/07-product-roadmap.md) | Product roadmap | ✓ Complete |
+| Project | Path | Relationship |
+|---|---|---|
+| MOVEX REST API | `c:\Projects\MOVEX\API-Integration\movex-rest-api` | M3 MI transaction layer |
+| MyInvois-Service | `c:\Projects\MyInvois-Service` | LHDN e-invoicing proxy target |
+| Reporting-Service | `c:\Projects\Reporting-Service` | Reports and exchange rates proxy target |
+| WMS | `c:\Projects\WMS` | Phase 3 integration target |
+| MMES | `c:\Projects\MMES` | Phase 3 integration target |
+| MAS Framework | `c:\Projects\.github` | Skills, agent registry, governance |
 
-### 🗺️ Diagrams
-| Document | Purpose | Status |
-|----------|---------|--------|
-| [docs/diagrams/README.md](docs/diagrams/README.md) | Diagram index | ✓ Complete |
-| [docs/diagrams/architecture.md](docs/diagrams/architecture.md) | System architecture | ✓ Complete |
-| [docs/diagrams/auth-flow.md](docs/diagrams/auth-flow.md) | Auth + RBAC flow | ✓ Complete |
-| [docs/diagrams/deployment-topology.md](docs/diagrams/deployment-topology.md) | Deployment topology | ✓ Complete |
-| [docs/diagrams/data-flow.md](docs/diagrams/data-flow.md) | Data flow | ✓ Complete |
-| [docs/diagrams/integration-sequence.md](docs/diagrams/integration-sequence.md) | Integration sequence | ✓ Complete |
-| [docs/diagrams/workflow-process.md](docs/diagrams/workflow-process.md) | MMS175 workflow | ✓ Complete |
-| [docs/diagrams/decision-tree.md](docs/diagrams/decision-tree.md) | Endpoint exposure decision tree | ✓ Complete |
+---
 
-## 🔗 Related Projects
+## AI Memory & Guidelines
 
-- **movex-rest-api**: `C:\Projects\MOVEX\API-Integration\movex-rest-api\`
-  - Provides connection pool, transaction builder, response parser
-  - SM-Portal extends this with RBAC and UI
+Before making any changes to this project, read:
 
-- **Skills Registry**: `C:\Projects\.github\skills\`
-  - Centralized capability definitions
-  - Skills referenced by this project
-
-- **SRX Project Template**: `C:\Projects\IT-Strategy\foundation\templates\srx-project-template\`
-  - Standard project structure
-  - AI agent integration patterns
-
-## 🤝 Contributing
-
-This is an internal SRX project. Development follows:
-
-1. **Skills-based architecture** - Implement skills from registry
-2. **AI-first development** - Use AI agents with context in `ai/`
-3. **Config-driven design** - Minimize hardcoding
-4. **Security by default** - RBAC + audit on every endpoint
-
-See [ai/rules.md](ai/rules.md) for detailed guidelines.
-
-## 📞 Support
-
-- **Skills Reference**: Check `C:\Projects\.github\skills\` for implementation patterns
-- **M3 Context**: See [ai/memory/01-manufacturing-context.md](ai/memory/01-manufacturing-context.md)
-- **AI Guidelines**: Read [ai/rules.md](ai/rules.md)
-
-
+1. [ai/rules.md](ai/rules.md) — Development guidelines and safety rules
+2. [ai/memory/00-product-vision.md](ai/memory/00-product-vision.md) — Portal vision and scope
+3. [ai/memory/02-system-architecture.md](ai/memory/02-system-architecture.md) — Architecture principles
+4. [ai/memory/06-deployment-lessons-learned.md](ai/memory/06-deployment-lessons-learned.md) — IIS deployment lessons (read before any deployment)
+5. [ai/memory/07-product-roadmap.md](ai/memory/07-product-roadmap.md) — What's coming and why

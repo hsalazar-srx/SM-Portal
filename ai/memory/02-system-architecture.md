@@ -1,29 +1,37 @@
-# MOVEX-Portal - System Architecture
+# Scanfil APAC Portal — System Architecture
 
-**Last Updated**: 2026-02-09  
-**Status**: Phase 1 - Foundation  
-**Version**: 0.1.0 (Pre-Alpha)  
+**Last Updated**: March 2026
+**Status**: Phase 1 Complete — Phase 2 In Progress
+**Version**: 0.3.0
 **UI Architecture**: React 18 + shadcn/ui + Tailwind CSS
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
-MOVEX-Portal is a **modern, secure, config-driven application** that provides seamless access to M3 MOVEX endpoints.
-It consists of a **React SPA** and a **separate MOVEX-Portal API** that orchestrates RBAC, audit logging, and endpoint execution.
+The Scanfil APAC Portal is a **secure enterprise integration gateway** — a React SPA backed by a
+.NET 8 API that provides unified, RBAC-enforced, fully audited access to every technology system
+Scanfil APAC operates. It is not a monolith for one system; it is the standard access pattern for all.
+
+**Current integrations (March 2026):**
+- M3 MOVEX (ERP) — generic endpoint executor
+- MyInvois-Service — LHDN e-invoicing / invoice extract
+- Reporting-Service — RBA exchange rates, cost/financial reports (Phase 2)
+- Active Directory — authentication and RBAC
 
 **Technology Stack**:
-- **Frontend**: React 18 + TypeScript + shadcn/ui + Tailwind CSS (Modern SPA)
-- **Backend**: MOVEX-Portal API (ASP.NET Core 8.0 RESTful JSON API)
-- **Database**: SQL Server 2019 (Audit logs)
-- **Authentication**: Windows AD + JWT tokens
+- **Frontend**: React 18 + TypeScript + shadcn/ui + Tailwind CSS
+- **Backend**: ASP.NET Core 8.0 REST API (Windows Auth, RBAC, audit logging)
+- **Audit**: JSONL file log, risk-tiered retention (7 years for CRITICAL)
+- **Authentication**: Windows Integrated Auth (IIS NTLM/Kerberos)
 
 ### Design Principles
 
-1. **Configuration Over Code** - Add new endpoints via JSON config, no deployment required
-2. **Security First** - RBAC enforcement, comprehensive auditing, defense-in-depth
-3. **Skills-Based Architecture** - Reusable patterns from centralized skills registry
-4. **Modern UX** - React + shadcn/ui + Tailwind for professional, customizable interface
-5. **Separation of Concerns** - Independent frontend SPA and backend API
-6. **ISO 27001 Compliance** - Immutable audit trails, access controls, data protection
+1. **Gateway Pattern** — The portal is infrastructure. Each integration is a thin proxy controller with standard RBAC and audit applied. No business logic lives here that belongs in a downstream service.
+2. **Configuration Over Code** — M3 endpoints and low-complexity integrations added via JSON config; no code required per operation.
+3. **Security at the Boundary** — Every request is authenticated, authorised, and audited before touching any downstream system. The portal is the single enforcement point.
+4. **System Isolation** — Downstream service credentials live in each service's own secrets file. The portal holds only its own secrets and forwards requests with X-Correlation-Id.
+5. **Progressive Enhancement** — Read-only integrations first, write operations only after RBAC and audit are validated in that domain.
+6. **Independent Integration Deployability** — New integrations (controllers + frontend pages) never break existing ones.
+7. **ISO 27001 Compliance** — Immutable audit trails, access controls, data protection built in from the start.
 
 ### Why React + shadcn/ui + Tailwind CSS?
 
@@ -57,66 +65,77 @@ It consists of a **React SPA** and a **separate MOVEX-Portal API** that orchestr
 
 ## 📊 Logical Architecture
 
-### System Context Diagram (Improved)
+### System Context Diagram
 
 ```mermaid
 C4Context
-    title MOVEX-Portal System Context - Modern SPA Architecture
+    title Scanfil APAC Portal — Enterprise Integration Gateway
 
-    Person(user, "Business User", "Access M3 via<br/>web portal")
-    Person(admin, "System Admin", "Manage RBAC<br/>& audit logs")
+    Person(user, "Business User", "Finance / Warehouse /<br/>Production / Procurement")
+    Person(admin, "System Admin", "RBAC, audit,<br/>endpoint registry")
 
-    System_Boundary(portal, "MOVEX-Portal") {
-        System(frontend, "React Web App", "Modern SPA<br/>shadcn/ui + Tailwind")
-        System(api, "MOVEX-Portal API", "RESTful JSON API<br/>RBAC + Audit")
+    System_Boundary(portal, "Scanfil APAC Portal") {
+        System(frontend, "React Web App", "shadcn/ui + Tailwind<br/>HTTPS, Windows Auth")
+        System(api, "Portal API", "ASP.NET Core 8<br/>RBAC + Audit Gateway")
     }
 
-    System_Ext(ad, "Active Directory", "User auth<br/>& groups")
-    System_Ext(m3api, "Movex REST API", "M3 integration")
-    System_Ext(db, "SQL Server", "Audit logs<br/>immutable")
+    System_Ext(ad, "Active Directory", "SRXGLOBAL.COM<br/>NTLM / Kerberos")
+    System_Ext(m3api, "MOVEX REST API", "M3 ERP<br/>MI transactions")
+    System_Ext(myinvois, "MyInvois-Service", "LHDN e-Invoicing<br/>AP/AR invoices")
+    System_Ext(reporting, "Reporting-Service", "RBA exchange rates<br/>Cost/Finance reports")
+    System_Ext(audit, "Audit Log", "JSONL file<br/>7-year retention")
 
     Rel(user, frontend, "Browse & Execute", "HTTPS")
     Rel(admin, frontend, "Manage & Monitor", "HTTPS")
-    Rel(frontend, api, "API Calls", "HTTP/JSON")
-    Rel(api, ad, "Authenticate", "LDAP")
-    Rel(api, m3api, "Execute Trans.", "HTTP")
-    Rel(api, db, "Log Audit", "SQL")
+    Rel(frontend, api, "API calls", "HTTP/JSON + NTLM")
+    Rel(api, ad, "Authenticate & groups", "Kerberos/NTLM")
+    Rel(api, m3api, "M3 transactions", "HTTP/JSON")
+    Rel(api, myinvois, "Invoice extract", "HTTP + X-API-Key")
+    Rel(api, reporting, "Rates & reports", "HTTP + X-API-Key")
+    Rel(api, audit, "Log all operations", "Append JSONL")
 ```
 
-### Container Architecture (Improved)
+> Future integrations (WMS, MES, PLM, IoT) follow the same pattern:
+> each adds one external box and one `Rel` from the Portal API.
+
+### Container Architecture
 
 ```mermaid
 C4Container
-  title MOVEX-Portal Containers - React Frontend + Portal API
+  title Scanfil APAC Portal — Container View
 
     Person(user, "Business User")
 
-    Container_Boundary(frontend, "React Frontend") {
-      Container(ui, "shadcn/ui", "React + TS", "Flashy modern UI")
-      Container(router, "React Router", "TypeScript", "Client navigation")
-      Container(state, "Zustand", "TypeScript", "Global state")
-      Container(query, "TanStack Query", "TypeScript", "Server state")
+    Container_Boundary(frontend_b, "React Frontend (IIS static)") {
+      Container(ui, "shadcn/ui Components", "React 18 + TS", "Modern SPA")
+      Container(router, "React Router 6", "TypeScript", "Client routing")
+      Container(auth_ctx, "AuthContext", "TypeScript", "Windows AD session")
     }
 
-    Container_Boundary(api, "MOVEX-Portal API") {
-        Container(ctrl, "Controllers", "C#", "JSON endpoints")
-        Container(middleware, "Middleware", "C#", "RBAC & Audit")
-        Container(services, "Services", "C#", "Business logic")
+    Container_Boundary(api_b, "Portal API (IIS InProcess)") {
+        Container(ctrl, "Controllers", "C# ASP.NET Core", "Auth / Endpoints / Invoices / ExchangeRates")
+        Container(middleware, "RBAC + Audit Middleware", "C#", "Enforce access, log every operation")
+        Container(services, "Services", "C#", "Executor, RBAC, Registry, API clients")
+        Container(config, "Config Files", "JSON", "endpoint-registry.json, rbac-config.json")
     }
 
     System_Ext(ad, "Active Directory")
-    System_Ext(m3api, "Movex REST API")
-    ContainerDb_Ext(db, "SQL Server", "Audit DB")
+    System_Ext(m3api, "MOVEX REST API")
+    System_Ext(myinvois, "MyInvois-Service :5051")
+    System_Ext(reporting, "Reporting-Service :5052")
+    ContainerDb_Ext(audit, "Audit Log (JSONL)")
 
-    Rel(user, ui, "Interacts")
-    Rel(ui, router, "Routes")
-    Rel(ui, state, "State")
-    Rel(query, ctrl, "HTTP/JSON")
+    Rel(user, ui, "Uses")
+    Rel(ui, auth_ctx, "Auth state")
+    Rel(ui, ctrl, "HTTP/JSON")
     Rel(ctrl, middleware, "Pipeline")
     Rel(middleware, services, "Invokes")
-    Rel(services, m3api, "Executes")
-    Rel(middleware, ad, "Validates")
-    Rel(middleware, db, "Logs")
+    Rel(middleware, ad, "Windows Auth")
+    Rel(middleware, audit, "Appends")
+    Rel(services, m3api, "M3 transactions")
+    Rel(services, myinvois, "Invoice proxy")
+    Rel(services, reporting, "Rate proxy")
+    Rel(services, config, "Reads")
 
     style frontend fill:#61dafb,stroke:#000,stroke-width:2px,color:#000
     style api fill:#68a063,stroke:#000,stroke-width:2px,color:#fff

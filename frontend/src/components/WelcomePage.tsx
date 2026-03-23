@@ -1,10 +1,11 @@
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import ResponsiveHeader from '@/components/ResponsiveHeader';
+import PageFooter from '@/components/PageFooter';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeaderStrip, CardBody } from '@/components/ui/card';
 import { Alert } from '@/components/ui/alert';
-import { H2, Display, Body, Muted, Code, Caption } from '@/components/ui/typography';
+import { H2, Display, Body, Code } from '@/components/ui/typography';
 
 export default function WelcomePage() {
   const { user, signOut } = useAuth();
@@ -24,10 +25,10 @@ export default function WelcomePage() {
       {/* Responsive Header */}
       <ResponsiveHeader
         title="Scanfil APAC Portal"
-        subtitle="Secure M3 Endpoint Access"
+        subtitle="Enterprise Integration Gateway"
         userName={user.displayName}
         onSignOut={signOut}
-        showComponentsLink={true}
+        showComponentsLink={false}
       />
 
       <div className="flex-1">
@@ -111,6 +112,13 @@ export default function WelcomePage() {
                   disabled: false,
                 },
                 {
+                  title: 'Exchange Rates',
+                  desc: 'SPOT rates (USD/AUD) by date — sourced from RBA',
+                  icon: '💱',
+                  path: '/exchange-rates',
+                  disabled: false,
+                },
+                {
                   title: 'Role Management',
                   desc: 'Manage RBAC permissions (Admin only)',
                   icon: '👥',
@@ -158,74 +166,9 @@ export default function WelcomePage() {
             </div>
           </div>
         </section>
-
-        {/* User Info Section */}
-        <section className="w-full px-md lg:px-lg pb-md md:pb-lg">
-          <div className="max-w-7xl mx-auto">
-            <H2 className="mb-md md:mb-lg">Your Profile</H2>
-            <Card className="shadow-md">
-              <CardHeaderStrip 
-                title="Authentication Details"
-              />
-              <CardBody>
-                <div className="space-y-lg">
-                  <div className="grid md:grid-cols-2 gap-lg">
-                    <div>
-                      <Muted className="block text-xs uppercase tracking-wider mb-sm font-semibold">
-                        Identity
-                      </Muted>
-                      <Body className="font-mono text-sm">{user.identity}</Body>
-                    </div>
-                    <div>
-                      <Muted className="block text-xs uppercase tracking-wider mb-sm font-semibold">
-                        Display Name
-                      </Muted>
-                      <Body>{user.displayName}</Body>
-                    </div>
-                    <div>
-                      <Muted className="block text-xs uppercase tracking-wider mb-sm font-semibold">
-                        Email
-                      </Muted>
-                      <Body>{user.email || <span className="italic text-text-weak">Not provided</span>}</Body>
-                    </div>
-                    <div>
-                      <Muted className="block text-xs uppercase tracking-wider mb-sm font-semibold">
-                        Auth Type
-                      </Muted>
-                      <Body className="font-semibold text-primary">{user.authType}</Body>
-                    </div>
-                  </div>
-                  <div className="pt-md border-t border-outline">
-                    <Muted className="block text-xs uppercase tracking-wider mb-md font-semibold">
-                      Assigned Roles
-                    </Muted>
-                    <div className="flex flex-wrap gap-sm">
-                      {user.roles.map(role => (
-                        <span 
-                          key={role}
-                          className="px-md py-sm bg-primary-100 text-primary-700 rounded-md text-sm font-semibold shadow-sm border border-primary-200 transition-all duration-normal hover:bg-primary-200"
-                        >
-                          {role}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-          </div>
-        </section>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-surface border-t border-outline mt-auto w-full px-md lg:px-lg">
-        <div className="max-w-7xl mx-auto py-md md:py-lg">
-          <Caption className="text-text-weak text-xs md:text-sm">
-            © {new Date().getFullYear()} SRX Manufacturing • Internal Portal • 
-            <a href="#" className="text-primary hover:text-primary-700 underline ml-sm transition-colors duration-normal">Support</a>
-          </Caption>
-        </div>
-      </footer>
+      <PageFooter />
     </div>
   );
 }

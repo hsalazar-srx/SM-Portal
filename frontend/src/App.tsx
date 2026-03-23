@@ -6,6 +6,7 @@ import SignIn from './components/SignIn';
 import WelcomePage from './components/WelcomePage';
 import ComponentShowcase from './components/ComponentShowcase';
 import InvoicesPage from './components/InvoicesPage';
+import ExchangeRatePage from './components/ExchangeRatePage';
 
 export default function App() {
   const { user, isLoading } = useAuth();
@@ -33,6 +34,7 @@ export default function App() {
       <Route path="/" element={<WelcomePage />} />
       <Route path="/components" element={<ComponentShowcase />} />
       <Route path="/invoices" element={<InvoicesPage />} />
+      <Route path="/exchange-rates" element={<ExchangeRatePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
