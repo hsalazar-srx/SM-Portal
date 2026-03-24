@@ -8,7 +8,7 @@
     deployment folder in a NTFS-protected JSON file.
 
 .PARAMETER AppPoolName
-    IIS application pool name. Default: smportal
+    IIS application pool name. Default: SMPortalPool
 
 .PARAMETER SecretsPath
     Full path where secrets.json will be created.
@@ -16,7 +16,7 @@
 
 .EXAMPLE
     .\Setup-ServerSecrets.ps1
-    .\Setup-ServerSecrets.ps1 -AppPoolName "smportal"
+    .\Setup-ServerSecrets.ps1 -AppPoolName "SMPortalPool"
 
 .NOTES
     Run as Administrator on SRXWEBAPP1.
@@ -24,7 +24,7 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$AppPoolName = "smportal",
+    [string]$AppPoolName = "SMPortalPool",
     [string]$SecretsPath = "C:\ProgramData\SRX\SM-Portal\secrets.json"
 )
 
@@ -72,9 +72,9 @@ function ConvertFrom-SecureStringToPlain([Security.SecureString]$secure) {
 function Read-SecretValue([string]$Prompt, [string]$ExistingValue = "") {
     $masked = if ($ExistingValue) { " [currently set — Enter to keep]" } else { " [required]" }
     $secureInput = Read-Host "$Prompt$masked" -AsSecureString
-    $input = ConvertFrom-SecureStringToPlain $secureInput
-    if ([string]::IsNullOrWhiteSpace($input)) { return $ExistingValue }
-    return $input.Trim()
+    $value = ConvertFrom-SecureStringToPlain $secureInput
+    if ([string]::IsNullOrWhiteSpace($value)) { return $ExistingValue }
+    return $value.Trim()
 }
 
 $existing = @{ MyInvoisApi = @{ ApiKey = "" }; ReportingApi = @{ BaseUrl = ""; ApiKey = "" } }
@@ -88,11 +88,11 @@ if (Test-Path $SecretsPath) {
 }
 
 $myInvoisApiKey   = Read-SecretValue "MyInvoisApi:ApiKey   (MyInvois-Service primary key)" `
-    ($existing.MyInvoisApi?.ApiKey ?? "")
+    (if ($existing.MyInvoisApi -and $existing.MyInvoisApi.ApiKey) { $existing.MyInvoisApi.ApiKey } else { "" })
 $reportingBaseUrl = Read-SecretValue "ReportingApi:BaseUrl (e.g. http://srxwebapp1/reporting/)" `
-    ($existing.ReportingApi?.BaseUrl ?? "")
+    (if ($existing.ReportingApi -and $existing.ReportingApi.BaseUrl) { $existing.ReportingApi.BaseUrl } else { "" })
 $reportingApiKey  = Read-SecretValue "ReportingApi:ApiKey  (Reporting-Service primary key)" `
-    ($existing.ReportingApi?.ApiKey ?? "")
+    (if ($existing.ReportingApi -and $existing.ReportingApi.ApiKey) { $existing.ReportingApi.ApiKey } else { "" })
 
 $missing = @()
 if (-not $myInvoisApiKey)   { $missing += "MyInvoisApi:ApiKey" }
@@ -166,5 +166,5 @@ Write-Host "  ReportingApi:BaseUrl         [set]"
 Write-Host "  ReportingApi:ApiKey          [set]"
 Write-Host ""
 Write-Host "The SM-Portal .NET backend will load this file at startup." -ForegroundColor Yellow
-Write-Host "NOTE: SM-Portal currently uses Windows AD for its IIS secrets loading pattern." -ForegroundColor Yellow
-Write-Host "      Add SMPORTAL_SECRETS_PATH env var in web.config pointing to: $SecretsPath" -ForegroundColor Yellow
+Write-Host "NOTE: SMPORTAL_SECRETS_PATH is already configured in src\web.config." -ForegroundColor DarkGreen
+Write-Host "      Default path matches: $SecretsPath" -ForegroundColor DarkGreen

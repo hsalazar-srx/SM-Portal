@@ -1,7 +1,7 @@
 # SM-Portal IIS Deployment Runbook
 
-**Version**: 1.1 (Updated with Frontend Build Process)
-**Last Updated**: Feb 25, 2026  
+**Version**: 1.2 (Added Issue 7 — IIS sub-app controller route mismatch)
+**Last Updated**: Mar 24, 2026
 **Purpose**: Step-by-step guide for deploying SM-Portal (backend API + React frontend) to IIS  
 **Target Audience**: DevOps engineers, system administrators  
 **Estimated Time**: 60-120 minutes (includes backend .NET and frontend npm builds)
@@ -901,9 +901,11 @@ If you prefer a graphical interface:
 Write-Host "=== Backend Build Validation ===" -ForegroundColor Cyan
 $backendPath = "C:\Deploy\SM-Portal-Release"
 $backendFiles = @(
-  "SM-Portal.dll",
-  "SM-Portal.runtimeconfig.json",
-  "appsettings.json"
+  "MovexPortal.API.exe",
+  "MovexPortal.API.dll",
+  "MovexPortal.API.runtimeconfig.json",
+  "appsettings.json",
+  "web.config"
 )
 
 foreach ($file in $backendFiles) {
@@ -2817,11 +2819,38 @@ Load Balancer (Round-robin)
 |-------|---------|-----------|
 | 500 error on startup | [App Pool Crashes](#issue-app-pool-crashes-on-startup) | 5-10 |
 | 401 Unauthorized | [Authentication Failed](#issue-401-unauthorized-authentication-failed) | 10-15 |
+| API returns 404 for all routes after IIS deploy | [IIS Sub-App Route Mismatch](#issue-api-returns-404-for-all-routes-iis-sub-app-route-mismatch) | 5 |
 | React app not found (404 on /) | [Web.config SPA Routing](#3-configure-webconfig-backend--optional-frontend-spa-routing) | 5 |
 | Cannot connect to SQL | [Can't Connect to SQL Server](#issue-cannot-connect-to-sql-server) | 15-20 |
 | Certificate error in browser | [Certificate Issues](#issue-certificate-validation-errors) | 10 |
 | Frontend blank/broken styles | [Rebuild Frontend](#phase-3-build-frontend-reactvite) | 5-10 |
 | npm install fails | [Frontend Troubleshooting](#frontend-build-troubleshooting) | 10-15 |
+
+---
+
+### Issue: API Returns 404 for All Routes (IIS Sub-App Route Mismatch)
+
+**Discovered**: 2026-03-19 during UAT on SRXWEBAPP1.
+
+**Symptom**: Every API call returns 404 after deploying to IIS as a sub-application under `/api`. The app starts, auth works, but no controller routes match.
+
+**Root Cause**: The backend is deployed as an IIS sub-application at `/api`. IIS strips the `/api` prefix before forwarding the request to ASP.NET Core. If controller `[Route]` attributes include `/api/...`, the routes never match because the prefix is already stripped.
+
+**Example — WRONG:**
+```csharp
+[Route("api/invoices")]   // ❌ IIS already stripped /api — this never matches
+public class InvoicesController : ControllerBase { }
+```
+
+**Example — CORRECT:**
+```csharp
+[Route("invoices")]       // ✅ IIS strips /api, ASP.NET Core sees /invoices
+public class InvoicesController : ControllerBase { }
+```
+
+**Fix**: Audit every controller's `[Route]` attribute. Remove any `api/` prefix from route strings. Use `UsePathBase("/api")` in `Program.cs` so the app is path-aware without repeating the prefix in routes.
+
+**Prevention**: The pre-deployment checklist (`ai/checklists/pre-deployment-iis-validation.md`) includes a "Critical IIS sub-app route audit" section — run it before every deployment.
 
 ---
 
