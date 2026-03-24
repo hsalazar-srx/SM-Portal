@@ -72,9 +72,9 @@ function ConvertFrom-SecureStringToPlain([Security.SecureString]$secure) {
 function Read-SecretValue([string]$Prompt, [string]$ExistingValue = "") {
     $masked = if ($ExistingValue) { " [currently set — Enter to keep]" } else { " [required]" }
     $secureInput = Read-Host "$Prompt$masked" -AsSecureString
-    $input = ConvertFrom-SecureStringToPlain $secureInput
-    if ([string]::IsNullOrWhiteSpace($input)) { return $ExistingValue }
-    return $input.Trim()
+    $value = ConvertFrom-SecureStringToPlain $secureInput
+    if ([string]::IsNullOrWhiteSpace($value)) { return $ExistingValue }
+    return $value.Trim()
 }
 
 $existing = @{ MyInvoisApi = @{ ApiKey = "" }; ReportingApi = @{ BaseUrl = ""; ApiKey = "" } }
@@ -88,11 +88,11 @@ if (Test-Path $SecretsPath) {
 }
 
 $myInvoisApiKey   = Read-SecretValue "MyInvoisApi:ApiKey   (MyInvois-Service primary key)" `
-    ($existing.MyInvoisApi?.ApiKey ??   "")
+    (if ($existing.MyInvoisApi -and $existing.MyInvoisApi.ApiKey) { $existing.MyInvoisApi.ApiKey } else { "" })
 $reportingBaseUrl = Read-SecretValue "ReportingApi:BaseUrl (e.g. http://srxwebapp1/reporting/)" `
-    ($existing.ReportingApi?.BaseUrl ?? "")
+    (if ($existing.ReportingApi -and $existing.ReportingApi.BaseUrl) { $existing.ReportingApi.BaseUrl } else { "" })
 $reportingApiKey  = Read-SecretValue "ReportingApi:ApiKey  (Reporting-Service primary key)" `
-    ($existing.ReportingApi?.ApiKey ?? "")
+    (if ($existing.ReportingApi -and $existing.ReportingApi.ApiKey) { $existing.ReportingApi.ApiKey } else { "" })
 
 $missing = @()
 if (-not $myInvoisApiKey)   { $missing += "MyInvoisApi:ApiKey" }
