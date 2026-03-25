@@ -548,6 +548,114 @@ authentication was working (NTLM handshake completing) and the app was running.
 
 ---
 
-**Status**: ACTIVE — updated 2026-03-19
+**Status**: ACTIVE — updated 2026-03-25
+**Next Review**: 2026-06-01
+**Owner**: DevOps & Development Team
+
+---
+
+## Issue 8: `%APPL_PHYSICAL_PATH%` Not Expanded by ANCM on SRXWEBAPP1 ⚠️ CRITICAL
+
+**Date**: 2026-03-25 | **Time Lost**: ~1 hour | **Sprint**: UAT redeployment
+
+**Symptom**: App fails to start immediately after IIS deployment. Event Log shows:
+```
+Unhandled exception. System.IO.DirectoryNotFoundException:
+C:\inetpub\wwwroot\SM-Portal\%APPL_PHYSICAL_PATH%\
+  at Microsoft.Extensions.FileProviders.PhysicalFileProvider..ctor
+  at Microsoft.Extensions.Hosting.HostBuilder.CreateHostingEnvironment
+  at Program.<Main>$(String[] args) in Program.cs:line 7
+```
+
+**Root Cause**:
+- `web.config` had `ASPNETCORE_CONTENTROOT` set to `%APPL_PHYSICAL_PATH%`
+- The ANCM (AspNetCore Module V2) version installed on SRXWEBAPP1 does **not** expand IIS server variables in `<environmentVariables>` values
+- The literal string `%APPL_PHYSICAL_PATH%` is passed to the process
+- ASP.NET Core treats it as a relative path and resolves it against the app's working directory
+- Result: content root becomes `C:\inetpub\wwwroot\SM-Portal\%APPL_PHYSICAL_PATH%\` → directory not found → crash before `WebApplication.CreateBuilder` returns
+
+**Why `%APPL_PHYSICAL_PATH%` does not reliably work**:
+`%APPL_PHYSICAL_PATH%` is an IIS server variable, not a Windows environment variable.
+ANCM only expands it in specific contexts (e.g., `processPath`). Expansion in
+`<environmentVariables>` values was added in later ANCM builds. Older .NET Hosting Bundle
+versions on production servers may not support it.
+
+**Fix Applied**:
+```xml
+<!-- BEFORE (fragile — depends on ANCM build expanding the IIS server variable) -->
+<environmentVariable name="ASPNETCORE_CONTENTROOT" value="%APPL_PHYSICAL_PATH%" />
+
+<!-- AFTER (reliable — hardcoded deployment path) -->
+<!-- %APPL_PHYSICAL_PATH% is NOT expanded by the ANCM version on SRXWEBAPP1. -->
+<environmentVariable name="ASPNETCORE_CONTENTROOT" value="C:\inetpub\wwwroot\SM-Portal" />
+```
+
+**Rule**:
+> Never rely on `%APPL_PHYSICAL_PATH%` in `<environmentVariables>`. Hardcode the
+> deployment path in `web.config`. If the deployment path changes, update `web.config`.
+
+**Prevention Checklist**:
+- [ ] `web.config` uses hardcoded `ASPNETCORE_CONTENTROOT`, not `%APPL_PHYSICAL_PATH%`
+- [ ] After redeployment, check Event Log before testing any endpoints
+- [ ] Enable `stdoutLogEnabled="true"` temporarily when diagnosing startup failures
+
+**Related**: `QUICK_REFERENCE_IIS_DEPLOYMENT.md` rule #8
+
+---
+
+**Status**: ACTIVE — updated 2026-03-25
+**Next Review**: 2026-06-01
+**Owner**: DevOps & Development Team
+
+---
+
+## Issue 9: `xlsx` npm Package Has Known Security Vulnerabilities — Use SheetJS CDN ⚠️ SECURITY
+
+**Date**: 2026-03-25 | **Time Lost**: ~30 min | **Sprint**: UAT redeployment
+
+**Symptom**: `npm audit` reports high-severity vulnerabilities after `npm install`:
+```
+found N vulnerabilities (N high)
+  in xlsx@0.18.5 — prototype pollution, ReDoS, pathological regex
+```
+
+**Root Cause**:
+The `xlsx` package on the npm public registry is a stale, unmaintained fork.
+SheetJS (the upstream authors) stopped publishing to npm and distributes exclusively
+via their CDN at `cdn.sheetjs.com`. The npm version has not received security patches.
+
+**Fix Applied**:
+```bash
+npm rm --save xlsx
+npm i --save https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz
+```
+
+`frontend/package.json` dependency is now:
+```json
+"xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+```
+
+**No code changes required** — the API is identical. `XLSX.utils.json_to_sheet()`, `XLSX.write()`, etc. work unchanged.
+
+**Upgrading in future**:
+1. Check the latest version at `cdn.sheetjs.com`
+2. Update the tarball URL in `package.json`
+3. Run `npm install`, then `npm run build`, verify Excel export
+4. Confirm `npm audit` shows zero vulnerabilities
+
+**Rule**:
+> Never install `xlsx` from the npm registry. Always use the SheetJS CDN tarball.
+> Run `npm audit` before every production build — block on high/critical findings.
+
+**Prevention Checklist**:
+- [ ] `package.json` uses SheetJS CDN URL, not `"xlsx": "^x.y.z"` from npm registry
+- [ ] `npm audit` run pre-deployment with zero high/critical vulnerabilities
+- [ ] After `npm install`, verify: `npm ls xlsx` shows the CDN tarball
+
+**Related**: `QUICK_REFERENCE_IIS_DEPLOYMENT.md` pre-deployment checklist
+
+---
+
+**Status**: ACTIVE — updated 2026-03-25
 **Next Review**: 2026-06-01
 **Owner**: DevOps & Development Team

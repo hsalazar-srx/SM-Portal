@@ -4,7 +4,7 @@
 
 ---
 
-## 🚨 CRITICAL: The 6 Mistakes That Cost 8+ Hours
+## 🚨 CRITICAL: The 8 Mistakes That Cost Hours
 
 | Problem | Symptom | Never Do | Always Do |
 |---------|---------|----------|-----------|
@@ -14,6 +14,8 @@
 | **Kestrel in IIS** | SocketException - port denied | Configure Kestrel section in appsettings.Prod | Remove Kestrel from appsettings.Production.json |
 | **Hardcoded Localhost** | API 404 in production | Put `localhost:5050` in frontend build | Use environment variables (.env.production) |
 | **Ephemeral Keys** | Sessions lost after app restart | Skip Data Protection configuration | `PersistKeysToFileSystem(absolutePath)` |
+| **IIS Sub-App Route Prefix** | All API routes return 404 | `[Route("api/invoices")]` | `[Route("invoices")]` — IIS strips the sub-app prefix |
+| **`%APPL_PHYSICAL_PATH%` in web.config** | DirectoryNotFoundException on startup: path ends with `\%APPL_PHYSICAL_PATH%\` | `value="%APPL_PHYSICAL_PATH%"` in `<environmentVariables>` | Hardcode: `value="C:\inetpub\wwwroot\SM-Portal"` |
 
 ---
 
@@ -24,9 +26,14 @@ BEFORE YOU DEPLOY, VERIFY:
 
 Configuration ✓
   □ No Kestrel section in appsettings.Production.json
-  □ ASPNETCORE_CONTENTROOT = "C:\inetpub\wwwroot\SM-Portal"
+  □ ASPNETCORE_CONTENTROOT = "C:\inetpub\wwwroot\SM-Portal" (hardcoded, NOT %APPL_PHYSICAL_PATH%)
   □ Data Protection keys path is absolute
   □ No hardcoded localhost URLs
+
+Frontend ✓
+  □ package.json xlsx uses SheetJS CDN tarball, NOT "xlsx": "^x.y.z" from npm registry
+  □ npm audit — zero high/critical vulnerabilities before building
+  □ npm run build succeeds cleanly
 
 IIS Setup ✓
   □ Only ONE app pool assigned (not DefaultAppPool + SMPortalPool)
@@ -49,19 +56,23 @@ Run Checklist ✓
 **5 Minutes to Prevent 8-Hour Outage**
 
 ```powershell
-# 1. Check app pool
+# 1. Check npm audit (frontend) — STOP if high/critical found
+cd C:\Projects\SM-Portal\frontend
+npm audit --audit-level=high  # Must exit 0
+
+# 2. Check app pool
 appcmd list apppool SMPortalPool /text:state  # Should say: Started
 
-# 2. Check only ONE app pool on site
+# 3. Check only ONE app pool on site
 appcmd list app "SM-Portal"  # Should show one pool
 
-# 3. Check Windows Auth enabled
+# 4. Check Windows Auth enabled
 appcmd list config "SM-Portal" /section:windowsAuthentication  # Should say: true
 
-# 4. Check keys folder exists and has permissions
+# 5. Check keys folder exists and has permissions
 icacls C:\inetpub\SM-Portal\keys  # Should show AppPool with Modify
 
-# 5. Test API is responding
+# 6. Test API is responding
 Invoke-WebRequest -Uri "https://api.local/api/health" -UseDefaultCredentials  # Should be 200 OK
 ```
 
@@ -185,7 +196,7 @@ VITE_ENV=production
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `DirectoryNotFoundException` | Content root path wrong | Check ASPNETCORE_CONTENTROOT in web.config |
+| `DirectoryNotFoundException` | Content root path wrong | Check ASPNETCORE_CONTENTROOT in web.config — must be hardcoded absolute path, NOT `%APPL_PHYSICAL_PATH%` |
 | `SocketException (10013)` | Kestrel config in IIS | Remove Kestrel from appsettings.Production.json |
 | `401 Unauthorized` | Wrong auth method | Check IISDefaults vs AddNegotiate in Program.cs |
 | `Cannot write keys` | Bad permissions | Run: `icacls C:\inetpub\SM-Portal\keys /grant "IIS AppPool\SMPortalPool":M` |
