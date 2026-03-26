@@ -21,8 +21,12 @@ function todayLocal(): string {
 }
 
 const CURRENCY_OPTIONS = [
-  // Add more currencies here when they are added to the RBA sync scope
   { value: 'USD', label: 'USD — US Dollar' },
+  { value: 'EUR', label: 'EUR — Euro' },
+  { value: 'GBP', label: 'GBP — British Pound' },
+  { value: 'JPY', label: 'JPY — Japanese Yen' },
+  { value: 'HKD', label: 'HKD — Hong Kong Dollar' },
+  { value: 'NZD', label: 'NZD — New Zealand Dollar' },
 ];
 
 export default function ExchangeRatePage() {
