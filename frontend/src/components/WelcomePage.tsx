@@ -113,7 +113,7 @@ export default function WelcomePage() {
                 },
                 {
                   title: 'Exchange Rates',
-                  desc: 'SPOT rates (USD/AUD) by date — sourced from RBA',
+                  desc: 'SPOT rates vs AUD by date — sourced from RBA',
                   icon: '💱',
                   path: '/exchange-rates',
                   disabled: false,
