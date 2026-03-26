@@ -113,7 +113,7 @@ export default function WelcomePage() {
                 },
                 {
                   title: 'Exchange Rates',
-                  desc: 'SPOT rates (USD, EUR, GBP, JPY, HKD, NZD / AUD) by date — sourced from RBA',
+                  desc: 'SPOT FX rates against AUD by date — sourced from RBA',
                   icon: '💱',
                   path: '/exchange-rates',
                   disabled: false,

@@ -17,6 +17,7 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.0",
     "tailwind-merge": "^2.2.1",
+    "// xlsx": "Pinned to SheetJS CDN tarball for security reasons; see DEPLOYMENT_LESSONS_LEARNED.md for details.",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
