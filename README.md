@@ -250,7 +250,7 @@ SM-Portal/
 
 **Critical deployment rules (from lessons learned):**
 1. Stop the **correct** app pool before copying files (`appcmd list app` first)
-2. `ASPNETCORE_CONTENTROOT=%APPL_PHYSICAL_PATH%` must be in `web.config`
+2. `ASPNETCORE_CONTENTROOT` must be the **hardcoded absolute path** in `web.config` — do NOT use `%APPL_PHYSICAL_PATH%` (not expanded by ANCM on SRXWEBAPP1)
 3. Do NOT set `ASPNETCORE_URLS` (Kestrel port conflict)
 4. `LoadUserProfile=true` on backend app pool (Data Protection key persistence)
 5. Controller routes must NOT include the `/api` sub-app prefix

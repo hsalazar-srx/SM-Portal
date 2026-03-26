@@ -891,6 +891,9 @@ If you prefer a graphical interface:
 | Build takes >5 minutes | Likely npm install phase; can be slow first time |
 | `dist/` folder not created | Check for error messages above; re-run `npm run build` |
 | TypeScript compilation errors | Check `src/` files for syntax errors; Try `npm run lint` to find issues |
+| `npm audit` reports high/critical in `xlsx` | `xlsx` from npm registry is stale — run: `npm rm --save xlsx && npm i --save https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz` |
+
+> **Security**: Run `npm audit --audit-level=high` before every production build. **Do not deploy if high or critical vulnerabilities are reported.** The `xlsx` package must come from the SheetJS CDN tarball, not the npm registry — see `DEPLOYMENT_LESSONS_LEARNED.md` Issue 9.
 
 ### 6. Validate Build Artifacts (Backend & Frontend)
 
