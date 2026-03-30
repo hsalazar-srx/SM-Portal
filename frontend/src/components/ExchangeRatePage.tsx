@@ -27,6 +27,8 @@ const CURRENCY_OPTIONS = [
   { value: 'JPY', label: 'JPY — Japanese Yen' },
   { value: 'HKD', label: 'HKD — Hong Kong Dollar' },
   { value: 'NZD', label: 'NZD — New Zealand Dollar' },
+  { value: 'MYR', label: 'MYR — Malaysian Ringgit' },
+  { value: 'SGD', label: 'SGD — Singapore Dollar' },
 ];
 
 export default function ExchangeRatePage() {
