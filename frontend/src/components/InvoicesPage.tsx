@@ -33,6 +33,16 @@ const TYPE_OPTIONS = [
   { value: 'AR',  label: 'AR — Accounts Receivable' },
 ];
 
+function invoiceBadge(inv: InvoiceSummary): { label: string; variant: 'warning' | 'success' | 'error' | 'neutral' } {
+  const isCreditNote = inv.totalInclTax < 0;
+  if (inv.type === 'AP') return isCreditNote
+    ? { label: 'AP-CN', variant: 'neutral' }
+    : { label: 'AP',    variant: 'warning' };
+  return isCreditNote
+    ? { label: 'AR-CN', variant: 'error' }
+    : { label: 'AR',    variant: 'success' };
+}
+
 export default function InvoicesPage() {
   const { user, signOut } = useAuth();
 
@@ -80,8 +90,9 @@ export default function InvoicesPage() {
   const pagedItems    = items.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   // Summary stats
-  const apCount  = items.filter(i => i.type === 'AP').length;
-  const arCount  = items.filter(i => i.type === 'AR').length;
+  const apCount     = items.filter(i => i.type === 'AP' && i.totalInclTax >= 0).length;
+  const arCount     = items.filter(i => i.type === 'AR' && i.totalInclTax >= 0).length;
+  const creditCount = items.filter(i => i.totalInclTax < 0).length;
 
   return (
     <div className="min-h-screen bg-bg text-text flex flex-col">
@@ -145,11 +156,12 @@ export default function InvoicesPage() {
           <>
             {/* Summary stats */}
             <StatsGrid
-              columns={3}
+              columns={4}
               stats={[
-                { label: 'Total Invoices',   value: totalCount, icon: '🧾', color: 'primary' },
-                { label: 'AP (Payable)',      value: apCount,    icon: '📥', color: 'warning' },
-                { label: 'AR (Receivable)',   value: arCount,    icon: '📤', color: 'success' },
+                { label: 'Total',         value: totalCount,  icon: '🧾', color: 'primary' },
+                { label: 'AP Invoices',   value: apCount,     icon: '📥', color: 'warning' },
+                { label: 'AR Invoices',   value: arCount,     icon: '📤', color: 'success' },
+                { label: 'Credit Notes',  value: creditCount, icon: '↩', color: 'error'   },
               ]}
             />
 
@@ -208,12 +220,9 @@ export default function InvoicesPage() {
                           </td>
                           <td className="px-md py-sm whitespace-nowrap">{inv.date}</td>
                           <td className="px-md py-sm">
-                            <Badge
-                              variant={inv.type === 'AP' ? 'warning' : 'success'}
-                              size="sm"
-                            >
-                              {inv.type}
-                            </Badge>
+                            {(() => { const b = invoiceBadge(inv); return (
+                              <Badge variant={b.variant} size="sm">{b.label}</Badge>
+                            ); })()}
                           </td>
                           <td className="px-md py-sm">{inv.companyCode}</td>
                           <td
