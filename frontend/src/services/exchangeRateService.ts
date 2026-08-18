@@ -5,7 +5,8 @@ const API_BASE = (import.meta as any).env.VITE_API_URL || 'http://localhost:5050
 
 /**
  * SPOT exchange rate result from the SM-Portal backend → Reporting-Service.
- * Rate convention: 1 {currency} = {rate} AUD  (e.g. 1 USD = 0.6828 AUD — RBA).
+ * Rate convention: 1 AUD = {rate} {currency}  (e.g. 1 AUD = 0.7114 USD — RBA "A$1=USD").
+ * Do NOT invert — matches CCURRA.CUARAT exactly.
  */
 export interface ExchangeRateResult {
   currency:      string;

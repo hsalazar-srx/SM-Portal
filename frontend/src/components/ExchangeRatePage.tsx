@@ -88,8 +88,8 @@ export default function ExchangeRatePage() {
           <H2>SPOT Exchange Rates</H2>
           <Muted className="text-sm mt-xs">
             Rates sourced from RBA Table F11.1 and stored in the MOVEX currency table (CCURRA).
-            Convention: 1 foreign currency unit = X AUD. For weekends and public holidays,
-            the most recent prior business day rate is returned.
+            Convention: 1 AUD = X foreign currency units (RBA publishes as &quot;A$1=USD&quot;).
+            For weekends and public holidays, the most recent prior business day rate is returned.
           </Muted>
         </div>
 
@@ -136,7 +136,7 @@ export default function ExchangeRatePage() {
         {hasLoaded && !isLoading && rateResult === null && (
           <Alert kind="warning" title="No Rate Available">
             No exchange rate found for <strong>{queriedCurrency}</strong> on <strong>{queriedDate}</strong>.
-            The RBA had no published rate for this date or the previous 3 business days.
+            The RBA had no published rate for this date or the preceding fallback window.
             This typically occurs during extended public holiday periods.
           </Alert>
         )}
@@ -159,7 +159,7 @@ export default function ExchangeRatePage() {
               columns={3}
               stats={[
                 {
-                  label: 'SPOT Rate (AUD)',
+                  label: `SPOT Rate (${rateResult.currency} per AUD)`,
                   value: rateResult.rate.toFixed(4),
                   icon: '💱',
                   color: 'primary',
@@ -182,7 +182,7 @@ export default function ExchangeRatePage() {
             {/* Detail card */}
             <Card>
               <CardHeaderStrip
-                title={`${queriedCurrency}/AUD Rate — ${rateResult.requestedDate}`}
+                title={`AUD/${queriedCurrency} Rate — ${rateResult.requestedDate}`}
               />
               <CardBody>
                 <div className="space-y-lg">
@@ -190,7 +190,7 @@ export default function ExchangeRatePage() {
                   {/* Large rate display */}
                   <div className="text-center py-md border-b border-outline">
                     <p className="text-4xl font-bold text-primary font-mono tracking-tight">
-                      1 {rateResult.currency} = {rateResult.rate.toFixed(4)} AUD
+                      1 AUD = {rateResult.rate.toFixed(4)} {rateResult.currency}
                     </p>
                     <Muted className="text-sm mt-sm">
                       Rate type: <strong>{rateResult.rateType}</strong> · Source: {rateResult.source} Table F11.1
