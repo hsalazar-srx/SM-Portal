@@ -4,7 +4,9 @@ namespace MovexPortal.Models;
 /// SPOT exchange rate DTO — mirrors Reporting.Api ExchangeRateController response.
 /// SM-Portal owns this copy to avoid a cross-project dependency.
 ///
-/// Rate convention: 1 {Currency} = {Rate} AUD  (e.g. 1 USD = 0.6828 AUD — RBA convention).
+/// Rate convention: 1 AUD = {Rate} {Currency}  (e.g. 1 AUD = 0.7114 USD).
+/// Matches the RBA F11.1 CSV header ("A$1=USD") and M3 CCURRA.CUARAT, verified against
+/// pre-existing M3 rows written by APUCHER in 2003-2004. Do NOT invert this value.
 /// </summary>
 public class ExchangeRateResponse
 {
@@ -20,7 +22,7 @@ public class ExchangeRateResponse
     /// </summary>
     public string  EffectiveDate { get; set; } = string.Empty;
 
-    /// <summary>Exchange rate: how many AUD equal 1 unit of Currency.</summary>
+    /// <summary>Exchange rate: how many units of Currency equal 1 AUD.</summary>
     public decimal Rate          { get; set; }
 
     /// <summary>Rate type — always "SPOT" for this endpoint.</summary>

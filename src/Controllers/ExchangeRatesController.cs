@@ -15,7 +15,7 @@ namespace MovexPortal.Controllers;
 /// Route:  GET /api/exchange-rates/{currency}/{date}
 /// Example: GET /api/exchange-rates/USD/2026-03-19
 ///
-/// Rate convention: 1 {currency} = {rate} AUD  (e.g. 1 USD = 0.6828 AUD — RBA convention).
+/// Rate convention: 1 AUD = {rate} {currency}  (e.g. 1 AUD = 0.7114 USD — RBA "A$1=USD").
 /// Weekend handling: Reporting-Service returns the most recent prior-weekday rate with
 ///                   usedFallback=true when querying Saturday, Sunday, or public holidays.
 /// </summary>
