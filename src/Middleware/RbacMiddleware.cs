@@ -35,6 +35,7 @@ public sealed class RbacMiddleware
         if (context.Request.Path.StartsWithSegments("/auth") ||
             context.Request.Path.StartsWithSegments("/debug") ||
             context.Request.Path.StartsWithSegments("/exchange-rates") ||
+            context.Request.Path.StartsWithSegments("/reports") ||
             context.Request.Path.StartsWithSegments("/swagger"))
         {
             await _next(context).ConfigureAwait(false);

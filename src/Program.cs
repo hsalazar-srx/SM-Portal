@@ -160,6 +160,23 @@ builder.Services.AddHttpClient<ExchangeRateApiClient>(client =>
     .HandleTransientHttpError()
     .CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
 
+// Reporting-Service report catalog + download — same base URL and API key as above.
+// Deliberately different from the exchange-rate client:
+//   - 180s timeout: a full item-master report takes ~15s; 15s would cut it off.
+//   - No retry: re-running a slow, expensive DB2 report multiplies load exactly when the
+//     source is already struggling. The circuit breaker alone stops hammering it.
+// Default headers are per client, so the X-API-Key header is set again here.
+builder.Services.AddHttpClient<ReportApiClient>(client =>
+{
+    var baseUrl = EnsureTrailingSlash(reportingApiBaseUrl ?? "http://localhost:5052/");
+    client.BaseAddress = new Uri(baseUrl);
+    client.DefaultRequestHeaders.Add("X-API-Key", reportingApiKey ?? string.Empty);
+    client.Timeout = TimeSpan.FromSeconds(180);
+})
+.AddPolicyHandler(HttpPolicyExtensions
+    .HandleTransientHttpError()
+    .CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
+
 // CORS for frontend SPA.
 // In production the frontend is served as static files from the same IIS site,
 // so the frontend and API share the same origin — CORS is not required.
@@ -175,7 +192,10 @@ builder.Services.AddCors(options =>
             policy.WithOrigins(frontendUrl)
                   .AllowAnyHeader()
                   .AllowAnyMethod()
-                  .AllowCredentials();
+                  .AllowCredentials()
+                  // Cross-origin JS cannot read Content-Disposition unless exposed — without
+                  // this, report downloads in dev lose their server-supplied file name.
+                  .WithExposedHeaders("Content-Disposition");
         }
         else
         {
