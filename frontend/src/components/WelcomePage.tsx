@@ -119,6 +119,13 @@ export default function WelcomePage() {
                   disabled: false,
                 },
                 {
+                  title: 'Reports',
+                  desc: 'Download live MOVEX reports as Excel — Inventory List and more',
+                  icon: '📑',
+                  path: '/reports',
+                  disabled: false,
+                },
+                {
                   title: 'Role Management',
                   desc: 'Manage RBAC permissions (Admin only)',
                   icon: '👥',
