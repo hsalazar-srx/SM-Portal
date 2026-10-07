@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovexPortal.Services;
+using Polly.CircuitBreaker;
 
 namespace MovexPortal.Controllers;
 
@@ -69,6 +70,29 @@ public class ExchangeRatesController(
                 });
 
             return Ok(result);
+        }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogError(ex,
+                "[ExchangeRatesController] Reporting-Service timed out correlationId={CorrelationId}",
+                correlationId);
+            return StatusCode(504, new
+            {
+                error         = "Exchange rate service took too long to respond. Please try again shortly.",
+                correlationId = correlationId
+            });
+        }
+        catch (BrokenCircuitException ex)
+        {
+            // Open after repeated upstream failures — not an HttpRequestException, so it needs its own catch.
+            logger.LogError(ex,
+                "[ExchangeRatesController] Reporting-Service circuit open correlationId={CorrelationId}",
+                correlationId);
+            return StatusCode(502, new
+            {
+                error         = "Exchange rate service is temporarily unavailable. Please try again shortly.",
+                correlationId = correlationId
+            });
         }
         catch (HttpRequestException ex)
         {
