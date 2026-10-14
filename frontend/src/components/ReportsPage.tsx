@@ -181,7 +181,9 @@ export default function ReportsPage() {
         <LoadingState isLoading={!catalogLoaded} message="Loading reports…" size="lg" />
 
         {catalogLoaded && !catalogError && reports.length === 0 && (
-          <Alert kind="info" title="No reports available">There are no reports to show yet.</Alert>
+          <Alert kind="info" title="No reports available">
+            Your account does not have access to any reports. Contact IT if you need access.
+          </Alert>
         )}
 
         {reports.length > 0 && (

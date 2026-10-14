@@ -11,10 +11,12 @@ namespace MovexPortal.Controllers;
 
 /// <summary>
 /// Report catalog and download proxy — delegates to Reporting-Service via ReportApiClient.
-/// Authentication: Windows AD ([Authorize]). Read-only data, so no RBAC registry entry;
-/// the catalog's RequiredRole is not enforced yet (deferred, see the Reports design doc).
+/// Authentication: Windows AD ([Authorize]). Authorization: each catalog report's requiredRole,
+/// mapped to AD groups in config/rbac-config.json and checked by ReportAccess. Users only see and
+/// run the reports their groups allow; with no groups configured, nobody does.
 ///
-/// Routes: GET  /api/reports
+/// Routes: GET  /api/reports                 → reports this user may run
+///         GET  /api/reports/access          → { allowed } — drives the welcome-page tile
 ///         POST /api/reports/{id}/download   → the rendered file (Excel by default)
 /// </summary>
 [ApiController]
@@ -22,6 +24,7 @@ namespace MovexPortal.Controllers;
 [Authorize]
 public class ReportsController(
     ReportApiClient reportApiClient,
+    ReportAccess access,
     ILogger<ReportsController> logger) : ControllerBase
 {
     private static readonly Regex ReportIdRegex =
@@ -29,13 +32,35 @@ public class ReportsController(
 
     private static readonly HashSet<string> FileFormats = new(StringComparer.OrdinalIgnoreCase) { "excel", "pdf" };
 
+    /// <summary>
+    /// Whether the user can run at least one catalog report — drives the welcome-page tile.
+    /// Checked against the catalog rather than "holds any role", because rbac-config.json also
+    /// holds M3 roles that grant no reports. Reporting-Service unavailable → not allowed.
+    /// </summary>
+    [HttpGet("access")]
+    public async Task<IActionResult> GetAccess(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var reports = await reportApiClient.ListReportsAsync(HttpContext.TraceIdentifier, cancellationToken);
+            return Ok(new { allowed = reports.Any(r => access.CanRun(User, r.RequiredRole)) });
+        }
+        catch (Exception ex) when (ex is HttpRequestException or BrokenCircuitException
+                                   || (ex is TaskCanceledException && !cancellationToken.IsCancellationRequested))
+        {
+            logger.LogWarning(ex, "[ReportsController] Catalog unavailable for access check");
+            return Ok(new { allowed = false });
+        }
+    }
+
     [HttpGet]
     public async Task<IActionResult> List(CancellationToken cancellationToken = default)
     {
         var correlationId = HttpContext.TraceIdentifier;
         try
         {
-            return Ok(await reportApiClient.ListReportsAsync(correlationId, cancellationToken));
+            var reports = await reportApiClient.ListReportsAsync(correlationId, cancellationToken);
+            return Ok(reports.Where(r => access.CanRun(User, r.RequiredRole)).ToList());
         }
         catch (Exception ex) when (ex is HttpRequestException or BrokenCircuitException
                                    || (ex is TaskCanceledException && !cancellationToken.IsCancellationRequested))
@@ -71,6 +96,24 @@ public class ReportsController(
 
         try
         {
+            // The catalog is the authority on which role a report needs — check before running it.
+            var report = (await reportApiClient.ListReportsAsync(correlationId, cancellationToken))
+                .FirstOrDefault(r => string.Equals(r.Id, id, StringComparison.OrdinalIgnoreCase));
+
+            if (report is null)
+                return NotFound(new { error = $"Report '{id}' does not exist.", correlationId });
+
+            if (!access.CanRun(User, report.RequiredRole))
+            {
+                logger.LogWarning("[ReportsController] Denied User={User} report={ReportId} requiredRole={Role}",
+                    user, id, report.RequiredRole);
+                return StatusCode(403, new
+                {
+                    error = "You do not have access to this report. Contact IT if you need it.",
+                    correlationId
+                });
+            }
+
             var file = await reportApiClient.DownloadAsync(
                 id, format, request.Parameters, correlationId, cancellationToken);
 

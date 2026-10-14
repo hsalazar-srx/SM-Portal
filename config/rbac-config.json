@@ -27,6 +27,13 @@
       "adGroups": ["MOVEX-API-RO"],
       "allowedEndpoints": ["mms200-read"],
       "maxRiskLevel": "LOW"
+    },
+    {
+      "name": "Reporting_Read",
+      "description": "See and download Reporting-Service reports (catalog requiredRole). Grants no M3 endpoints.",
+      "adGroups": [],
+      "allowedEndpoints": [],
+      "maxRiskLevel": "LOW"
     }
   ]
 }
