@@ -203,7 +203,7 @@ a report only if they are in one of that role's `adGroups`:
 ```json
 {
   "name": "Reporting_Read",
-  "adGroups": ["SRXGLOBAL\\PORTAL-REPORTS-FIN"],
+  "adGroups": ["SRXGLOBAL\\rpt-reader"],
   "allowedEndpoints": [],
   "maxRiskLevel": "LOW"
 }
@@ -215,9 +215,11 @@ a report only if they are in one of that role's `adGroups`:
   Check the startup log for `[ReportAccess] Role Reporting_Read ← …`, or an error naming the group.
   After changing the file, **recycle the app pool**.
 - **If name lookup fails on the server**, use the group's SID (`S-1-5-21-…`) instead of its name;
-  SIDs are used as-is. Get it with `(Get-ADGroup 'PORTAL-REPORTS-FIN').SID.Value`.
-- **Nest groups** (e.g. the Finance department group inside the reports group) rather than adding
-  users one by one — Windows includes nested membership in the logon token.
+  SIDs are used as-is. Get it with `(Get-ADGroup 'rpt-reader').SID.Value`.
+- **Reference Application Role groups, not Business Function groups** (Oskar ADR-013):
+  `rpt-reader` lives in `OU=Application Roles`; Business Function groups such as
+  `grp-fin-manager` are nested into it in AD, so granting access needs no config change.
+- Nested membership needs nothing from the portal — Windows includes it in the logon token.
 - **Users added to a group must sign out of Windows and back in** before the tile appears.
 
 ---
