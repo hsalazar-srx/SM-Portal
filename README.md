@@ -121,7 +121,7 @@ cd C:\Projects\SM-Portal
 # Configure user secrets
 cd src
 dotnet user-secrets set "MyInvoisApi:ApiKey" "your-key"
-dotnet user-secrets set "ReportingApi:ApiKey" "your-key"
+dotnet user-secrets set "ReportingApi:ApiKey" "your-key"   # must equal Reporting-Service's ApiKeys:Primary
 
 # Run backend (Kestrel dev server, Negotiate auth)
 dotnet run --project src/MovexPortal.csproj
@@ -146,6 +146,21 @@ npm run dev
 GET http://localhost:5050/auth/test
 # Returns your Windows identity, AD groups, and mapped portal roles
 ```
+
+### Running Reports locally
+
+Start these **in this order** for the Reports module — VPN first, because the backend portal
+resolves AD group names once, at startup:
+
+1. **VPN on**, and `nltest /dsgetdc:srxglobal.com` names a domain controller
+2. Frontend: `npm run dev`
+3. Backend portal: `dotnet run --project .\src\MovexPortal.csproj`
+4. Reporting-Service, with `ExchangeRateSync__Enabled=false` (otherwise it writes rates into live MOVEX)
+5. Open **Reports**
+
+If the tile stays disabled, or you were only just added to `grp-fin-manager`, see
+**[docs/REPORTS_LOCAL_DEVELOPMENT.md](docs/REPORTS_LOCAL_DEVELOPMENT.md)** — it explains which parts of
+the order are hard requirements, the stale-Windows-sign-in gotcha, and a symptom-to-fix table.
 
 ---
 
