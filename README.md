@@ -222,6 +222,14 @@ a report only if they are in one of that role's `adGroups`:
 - Nested membership needs nothing from the portal — Windows includes it in the logon token.
 - **Users added to a group must sign out of Windows and back in** before the tile appears.
 
+#### Report help
+
+Each report in the Reporting-Service catalog can carry a `help` block: titled sections of text,
+term/meaning pairs and bullets. The Reports page shows it in a "How to read this report" panel,
+opened from a button beside the report and from the note after a download. The portal renders
+whatever the catalog declares, so **writing or changing help is an edit to the catalog, not the
+portal**. Reporting-Service tests keep each report's help in step with what the report produces.
+
 ---
 
 ## Project Structure

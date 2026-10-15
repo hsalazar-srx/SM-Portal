@@ -20,6 +20,29 @@ public class ReportDefinitionDto
     public string DefaultFormat { get; set; } = string.Empty;
     public int MaxRows { get; set; }
     public List<ReportParameterDto> Parameters { get; set; } = [];
+
+    /// <summary>In-app help from the catalog, shown beside the report. Null when the report has none.</summary>
+    public ReportHelpDto? Help { get; set; }
+}
+
+/// <summary>Mirrors Reporting.Core ReportHelp — plain titled sections, rendered by the Reports page.</summary>
+public class ReportHelpDto
+{
+    public List<ReportHelpSectionDto> Sections { get; set; } = [];
+}
+
+public class ReportHelpSectionDto
+{
+    public string Title { get; set; } = string.Empty;
+    public string? Text { get; set; }
+    public List<ReportHelpItemDto> Items { get; set; } = [];
+    public List<string> Bullets { get; set; } = [];
+}
+
+public class ReportHelpItemDto
+{
+    public string Term { get; set; } = string.Empty;
+    public string Text { get; set; } = string.Empty;
 }
 
 /// <summary>Typed report input — mirrors Reporting.Core ReportParameter.</summary>

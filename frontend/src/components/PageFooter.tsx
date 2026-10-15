@@ -1,5 +1,6 @@
 // src/components/PageFooter.tsx
 import { Caption } from '@/components/ui/typography';
+import { SUPPORT_EMAIL } from '@/lib/support';
 
 interface PageFooterProps {
   /** Page-specific context shown between the company name and the Support link.
@@ -14,7 +15,7 @@ export default function PageFooter({ context = 'Internal Portal' }: PageFooterPr
         <Caption className="text-text-weak text-xs md:text-sm">
           © {new Date().getFullYear()} Scanfil APAC • {context} •{' '}
           <a
-            href="mailto:itstaff_corp@srxglobal.com"
+            href={`mailto:${SUPPORT_EMAIL}`}
             className="text-primary hover:text-primary-700 underline ml-sm transition-colors duration-normal"
           >
             Support

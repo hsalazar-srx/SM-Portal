@@ -12,6 +12,7 @@ import { LoadingState, Spinner } from '@/components/ui/spinner';
 import { H2, H3, Caption, Muted } from '@/components/ui/typography';
 import reportService, { type ReportDefinition, type ReportParameter } from '@/services/reportService';
 import PageFooter from '@/components/PageFooter';
+import ReportHelpDrawer from '@/components/ReportHelpDrawer';
 
 // "InventoryManagement" → "Inventory Management"
 function domainLabel(domain: string): string {
@@ -100,6 +101,7 @@ export default function ReportsPage() {
   const [elapsed,       setElapsed]       = useState(0);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [savedFile,     setSavedFile]     = useState<string | null>(null);
+  const [helpOpen,      setHelpOpen]      = useState(false);
 
   const selected = reports.find(r => r.id === selectedId) ?? null;
 
@@ -133,6 +135,7 @@ export default function ReportsPage() {
     setValues(initialValues(report));
     setDownloadError(null);
     setSavedFile(null);
+    setHelpOpen(false);
   }
 
   const missingRequired = selected?.parameters
@@ -228,10 +231,17 @@ export default function ReportsPage() {
                   <>
                     <div className="space-y-xs">
                       <Muted className="text-sm">{selected.description}</Muted>
-                      <div className="flex flex-wrap gap-xs">
-                        <Badge variant="neutral" size="sm">{domainLabel(selected.domain)}</Badge>
-                        {selected.supportedFormats.includes('excel') && (
-                          <Badge variant="success" size="sm">Excel</Badge>
+                      <div className="flex flex-wrap items-center justify-between gap-sm">
+                        <div className="flex flex-wrap gap-xs">
+                          <Badge variant="neutral" size="sm">{domainLabel(selected.domain)}</Badge>
+                          {selected.supportedFormats.includes('excel') && (
+                            <Badge variant="success" size="sm">Excel</Badge>
+                          )}
+                        </div>
+                        {selected.help && (
+                          <Button variant="secondary" size="sm" onClick={() => setHelpOpen(true)} aria-haspopup="dialog">
+                            ? How to read this report
+                          </Button>
                         )}
                       </div>
                     </div>
@@ -277,6 +287,18 @@ export default function ReportsPage() {
                     {savedFile && !isRunning && (
                       <Alert kind="success" title="Download complete">
                         Saved <strong>{savedFile}</strong> to your Downloads folder.
+                        {selected.help && (
+                          <>
+                            {' '}Not sure how to read it?{' '}
+                            <button
+                              type="button"
+                              onClick={() => setHelpOpen(true)}
+                              className="font-medium underline hover:no-underline"
+                            >
+                              Open the guide
+                            </button>
+                          </>
+                        )}
                       </Alert>
                     )}
                   </>
@@ -286,6 +308,10 @@ export default function ReportsPage() {
           </div>
         )}
       </div>
+
+      {selected?.help && (
+        <ReportHelpDrawer report={selected} isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
+      )}
 
       <PageFooter />
     </div>
