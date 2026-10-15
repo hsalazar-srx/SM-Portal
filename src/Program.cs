@@ -177,6 +177,17 @@ builder.Services.AddHttpClient<ReportApiClient>(client =>
     .HandleTransientHttpError()
     .CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
 
+// Report access — catalog requiredRole → AD groups, from the same config/rbac-config.json as the
+// M3 roles, resolved to SIDs once. Empty or unresolvable groups grant nothing.
+builder.Services.AddSingleton(sp =>
+{
+    var rbac = sp.GetRequiredService<IRbacConfigProvider>().GetConfigAsync().GetAwaiter().GetResult();
+    return ReportAccess.FromConfiguration(
+        rbac.Roles.ToDictionary(r => r.Name, r => r.AdGroups.ToArray(), StringComparer.OrdinalIgnoreCase),
+        ReportAccess.ResolveWindowsAccount,
+        sp.GetRequiredService<ILoggerFactory>().CreateLogger<ReportAccess>());
+});
+
 // CORS for frontend SPA.
 // In production the frontend is served as static files from the same IIS site,
 // so the frontend and API share the same origin — CORS is not required.
@@ -206,6 +217,9 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Resolve report-access groups now, so problems appear in the startup log rather than on first use.
+app.Services.GetRequiredService<ReportAccess>();
 
 // Strip /api path base so Kestrel (dev) matches IIS virtual application path behaviour.
 // In IIS, the app lives at /api — requests arrive at ASP.NET Core with /api already stripped

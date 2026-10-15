@@ -12,6 +12,10 @@ public class ReportDefinitionDto
     public string Description { get; set; } = string.Empty;
     public string Domain { get; set; } = string.Empty;
     public string Category { get; set; } = string.Empty;
+
+    /// <summary>Role a user needs to see and run this report — mapped to AD groups by ReportAccess.</summary>
+    public string RequiredRole { get; set; } = string.Empty;
+
     public List<string> SupportedFormats { get; set; } = [];
     public string DefaultFormat { get; set; } = string.Empty;
     public int MaxRows { get; set; }
