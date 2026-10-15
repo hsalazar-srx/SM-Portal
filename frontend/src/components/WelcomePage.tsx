@@ -6,10 +6,19 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeaderStrip, CardBody } from '@/components/ui/card';
 import { Alert } from '@/components/ui/alert';
 import { H2, Display, Body, Code } from '@/components/ui/typography';
+import { useEffect, useState } from 'react';
+import reportService from '@/services/reportService';
 
 export default function WelcomePage() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+
+  // Reports tile is enabled only for users whose AD groups grant a report role.
+  // The server enforces this too — this only avoids offering a page that would be empty.
+  const [canAccessReports, setCanAccessReports] = useState(false);
+  useEffect(() => {
+    reportService.canAccess().then(setCanAccessReports).catch(() => setCanAccessReports(false));
+  }, []);
 
   if (!user) {
     return null; // Should not reach here if redirected properly
@@ -123,7 +132,7 @@ export default function WelcomePage() {
                   desc: 'Download live MOVEX reports as Excel — Inventory List and more',
                   icon: '📑',
                   path: '/reports',
-                  disabled: false,
+                  disabled: !canAccessReports,
                 },
                 {
                   title: 'Role Management',

@@ -49,6 +49,15 @@ function fileNameFrom(res: Response): string | null {
 }
 
 class ReportService {
+  /** Whether the signed-in user holds any report role (their AD groups). */
+  async canAccess(): Promise<boolean> {
+    const res = await fetch(`${API_BASE}/reports/access`, { method: 'GET', credentials: 'include' });
+    if (!res.ok) return false;
+    const body: { allowed?: boolean } = await res.json();
+    return body.allowed === true;
+  }
+
+  /** Reports the signed-in user may run — the server filters by their AD groups. */
   async listReports(): Promise<ReportDefinition[]> {
     const res = await fetch(`${API_BASE}/reports`, {
       method: 'GET',

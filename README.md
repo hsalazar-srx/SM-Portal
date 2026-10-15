@@ -195,6 +195,33 @@ Maps AD groups to portal roles, and roles to allowed endpoints.
 }
 ```
 
+#### Reports access (`Reporting_Read`)
+
+Each Reporting-Service catalog report declares a `requiredRole`. A user sees and can download
+a report only if they are in one of that role's `adGroups`:
+
+```json
+{
+  "name": "Reporting_Read",
+  "adGroups": ["SRXGLOBAL\\rpt-reader"],
+  "allowedEndpoints": [],
+  "maxRiskLevel": "LOW"
+}
+```
+
+- **Deny by default.** No groups, or a group that cannot be found, grants nothing — the Reports
+  tile stays disabled and the page lists no reports. The rest of the portal is unaffected.
+- **Group names are resolved to SIDs once at startup** (Windows tokens carry groups only as SIDs).
+  Check the startup log for `[ReportAccess] Role Reporting_Read ← …`, or an error naming the group.
+  After changing the file, **recycle the app pool**.
+- **If name lookup fails on the server**, use the group's SID (`S-1-5-21-…`) instead of its name;
+  SIDs are used as-is. Get it with `(Get-ADGroup 'rpt-reader').SID.Value`.
+- **Reference Application Role groups, not Business Function groups** (Oskar ADR-013):
+  `rpt-reader` lives in `OU=Application Roles`; Business Function groups such as
+  `grp-fin-manager` are nested into it in AD, so granting access needs no config change.
+- Nested membership needs nothing from the portal — Windows includes it in the logon token.
+- **Users added to a group must sign out of Windows and back in** before the tile appears.
+
 ---
 
 ## Project Structure

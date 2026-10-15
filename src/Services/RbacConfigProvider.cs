@@ -16,6 +16,8 @@ public interface IRbacConfigProvider
 
 public sealed class RbacConfigProvider : IRbacConfigProvider
 {
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+
     private readonly string _configPath;
     private RbacConfig? _cache;
 
@@ -30,7 +32,9 @@ public sealed class RbacConfigProvider : IRbacConfigProvider
             return _cache;
 
         await using var stream = File.OpenRead(_configPath);
-        var config = await JsonSerializer.DeserializeAsync<RbacConfig>(stream, cancellationToken: cancellationToken);
+        // Case-insensitive: the file uses camelCase ("roles", "adGroups"), the records PascalCase.
+        // With default options nothing bound and Roles was null.
+        var config = await JsonSerializer.DeserializeAsync<RbacConfig>(stream, JsonOptions, cancellationToken);
         _cache = config ?? new RbacConfig(new List<RbacRoleConfig>());
         return _cache;
     }

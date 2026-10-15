@@ -27,6 +27,13 @@
       "adGroups": ["MOVEX-API-RO"],
       "allowedEndpoints": ["mms200-read"],
       "maxRiskLevel": "LOW"
+    },
+    {
+      "name": "Reporting_Read",
+      "description": "See and download Reporting-Service reports (catalog requiredRole). Grants no M3 endpoints. grp-fin-manager is interim until it is nested into rpt-reader (ADR-013), then remove it.",
+      "adGroups": ["SRXGLOBAL\\rpt-reader", "SRXGLOBAL\\grp-fin-manager"],
+      "allowedEndpoints": [],
+      "maxRiskLevel": "LOW"
     }
   ]
 }
