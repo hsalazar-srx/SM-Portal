@@ -16,6 +16,8 @@ export interface ReportParameter {
   defaultValue:  string | null;
   allowedValues: string[];
   description:   string | null;
+  /** Parameters sharing a group are shown together under that heading, apart from the filters. */
+  group:         string | null;
 }
 
 /** A term and its meaning — a glossary entry, or one sheet of a workbook. */

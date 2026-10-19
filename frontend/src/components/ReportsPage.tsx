@@ -25,15 +25,17 @@ function initialValues(report: ReportDefinition): Record<string, string> {
 
 /** One form control per catalog parameter — no per-report code. */
 function ParameterField({
-  param, value, onChange, disabled,
+  param, value, onChange, disabled, compact = false,
 }: {
   param: ReportParameter;
   value: string;
   onChange: (value: string) => void;
   disabled: boolean;
+  /** Grouped fields sit in a tight grid: the group explains them once, so no per-field helper text. */
+  compact?: boolean;
 }) {
   const label = param.required ? `${param.displayName} *` : param.displayName;
-  const helperText = param.description ?? undefined;
+  const helperText = compact ? undefined : param.description ?? undefined;
 
   if (param.type === 'multiselect') {
     const selected = new Set(value.split(',').filter(Boolean));
@@ -79,7 +81,7 @@ function ParameterField({
   return (
     <Input type={inputType} label={label} helperText={helperText} value={value}
            step={param.type === 'decimal' ? 'any' : undefined}
-           placeholder={param.required ? undefined : 'Leave blank for all'}
+           placeholder={param.defaultValue ? `Default ${param.defaultValue}` : param.required ? undefined : 'Leave blank for all'}
            disabled={disabled} onChange={e => onChange(e.target.value)} />
   );
 }
@@ -137,6 +139,15 @@ export default function ReportsPage() {
     setSavedFile(null);
     setHelpOpen(false);
   }
+
+  // Ungrouped parameters are the filters; each group (e.g. "Book rates") is shown as its own block.
+  const filters = selected?.parameters.filter(p => !p.group) ?? [];
+  const groups = useMemo(() => {
+    const byGroup = new Map<string, ReportParameter[]>();
+    for (const p of selected?.parameters ?? [])
+      if (p.group) byGroup.set(p.group, [...(byGroup.get(p.group) ?? []), p]);
+    return [...byGroup.entries()];
+  }, [selected]);
 
   const missingRequired = selected?.parameters
     .filter(p => p.required && !p.defaultValue && !values[p.name]?.trim())
@@ -246,11 +257,11 @@ export default function ReportsPage() {
                       </div>
                     </div>
 
-                    {selected.parameters.length > 0 && (
+                    {filters.length > 0 && (
                       <div className="space-y-md">
                         <H3 className="text-base">Filters</H3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
-                          {selected.parameters.map(p => (
+                          {filters.map(p => (
                             <ParameterField
                               key={p.name}
                               param={p}
@@ -262,6 +273,40 @@ export default function ReportsPage() {
                         </div>
                       </div>
                     )}
+
+                    {groups.map(([heading, params]) => (
+                      <div key={heading} className="space-y-md">
+                        <div className="flex flex-wrap items-baseline justify-between gap-sm">
+                          <H3 className="text-base">{heading}</H3>
+                          <button
+                            type="button"
+                            className="text-sm text-primary underline disabled:opacity-50"
+                            disabled={isRunning}
+                            onClick={() => setValues(prev => ({
+                              ...prev,
+                              ...Object.fromEntries(params.map(p => [p.name, p.defaultValue ?? ''])),
+                            }))}
+                          >
+                            Reset to defaults
+                          </button>
+                        </div>
+                        {params.find(p => p.description)?.description && (
+                          <p className="text-xs text-text-weak">{params.find(p => p.description)?.description}</p>
+                        )}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-md">
+                          {params.map(p => (
+                            <ParameterField
+                              key={p.name}
+                              param={p}
+                              compact
+                              value={values[p.name] ?? ''}
+                              disabled={isRunning}
+                              onChange={v => setValues(prev => ({ ...prev, [p.name]: v }))}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    ))}
 
                     <div className="flex flex-wrap items-center gap-md">
                       <Button

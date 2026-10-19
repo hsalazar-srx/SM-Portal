@@ -58,6 +58,9 @@ public class ReportParameterDto
     public string? DefaultValue { get; set; }
     public List<string> AllowedValues { get; set; } = [];
     public string? Description { get; set; }
+
+    /// <summary>Parameters sharing a group are shown together under that heading (e.g. "Book rates").</summary>
+    public string? Group { get; set; }
 }
 
 /// <summary>Body of POST /api/reports/{id}/download.</summary>
