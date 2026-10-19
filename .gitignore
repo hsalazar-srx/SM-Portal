@@ -111,10 +111,8 @@ $RECYCLE.BIN/
 .AppleDouble
 .LSOverride
 
-# VSCode (allow shared recommended extensions)
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
+# VSCode: the whole .vscode/ folder is ignored (see .NET section above) — editor
+# settings and extension picks are per-person, not shared through the repo.
 
 # JetBrains Rider
 .idea/
