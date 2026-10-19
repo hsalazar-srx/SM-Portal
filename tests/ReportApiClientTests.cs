@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -39,6 +40,40 @@ public class ReportApiClientTests
         Assert.Equal("inventory.item-list", report.Id);
         Assert.Equal(new[] { "100", "300" }, Assert.Single(report.Parameters).AllowedValues);
         Assert.Equal("api/v1/reports", handler.LastRequest!.RequestUri!.PathAndQuery.TrimStart('/'));
+    }
+
+    [Fact]
+    public async Task ListReportsAsync_CarriesHelpThrough()
+    {
+        // The portal shows the catalog's help beside the report; it must arrive whole.
+        var handler = new FakeHandler(_ => Json(HttpStatusCode.OK, """
+            [{ "id": "finance.inventory-valuation", "displayName": "Inventory Valuation",
+               "help": { "sections": [
+                 { "title": "The four sheets", "text": "Read them in this order.",
+                   "items": [ { "term": "Reconciliation", "text": "Does the total look right?" } ] },
+                 { "title": "Before you rely on it", "bullets": [ "Check the company.", "Check the date." ] } ] } }]
+            """));
+
+        var report = Assert.Single(await CreateClient(handler).ListReportsAsync());
+
+        Assert.NotNull(report.Help);
+        Assert.Equal(new[] { "The four sheets", "Before you rely on it" }, report.Help!.Sections.Select(s => s.Title));
+        var sheets = report.Help.Sections[0];
+        Assert.Equal("Read them in this order.", sheets.Text);
+        var item = Assert.Single(sheets.Items);
+        Assert.Equal("Reconciliation", item.Term);
+        Assert.Equal("Does the total look right?", item.Text);
+        Assert.Equal(new[] { "Check the company.", "Check the date." }, report.Help.Sections[1].Bullets);
+    }
+
+    [Fact]
+    public async Task ListReportsAsync_ReportWithoutHelp_HasNullHelp()
+    {
+        var handler = new FakeHandler(_ => Json(HttpStatusCode.OK, """[{ "id": "x.y", "displayName": "X" }]"""));
+
+        var report = Assert.Single(await CreateClient(handler).ListReportsAsync());
+
+        Assert.Null(report.Help);
     }
 
     [Fact]

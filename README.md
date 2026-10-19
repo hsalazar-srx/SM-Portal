@@ -121,7 +121,7 @@ cd C:\Projects\SM-Portal
 # Configure user secrets
 cd src
 dotnet user-secrets set "MyInvoisApi:ApiKey" "your-key"
-dotnet user-secrets set "ReportingApi:ApiKey" "your-key"
+dotnet user-secrets set "ReportingApi:ApiKey" "your-key"   # must equal Reporting-Service's ApiKeys:Primary
 
 # Run backend (Kestrel dev server, Negotiate auth)
 dotnet run --project src/MovexPortal.csproj
@@ -146,6 +146,21 @@ npm run dev
 GET http://localhost:5050/auth/test
 # Returns your Windows identity, AD groups, and mapped portal roles
 ```
+
+### Running Reports locally
+
+Start these **in this order** for the Reports module — VPN first, because the backend portal
+resolves AD group names once, at startup:
+
+1. **VPN on**, and `nltest /dsgetdc:srxglobal.com` names a domain controller
+2. Frontend: `npm run dev`
+3. Backend portal: `dotnet run --project .\src\MovexPortal.csproj`
+4. Reporting-Service, with `ExchangeRateSync__Enabled=false` (otherwise it writes rates into live MOVEX)
+5. Open **Reports**
+
+If the tile stays disabled, or you were only just added to `grp-fin-manager`, see
+**[docs/REPORTS_LOCAL_DEVELOPMENT.md](docs/REPORTS_LOCAL_DEVELOPMENT.md)** — it explains which parts of
+the order are hard requirements, the stale-Windows-sign-in gotcha, and a symptom-to-fix table.
 
 ---
 
@@ -221,6 +236,14 @@ a report only if they are in one of that role's `adGroups`:
   `grp-fin-manager` are nested into it in AD, so granting access needs no config change.
 - Nested membership needs nothing from the portal — Windows includes it in the logon token.
 - **Users added to a group must sign out of Windows and back in** before the tile appears.
+
+#### Report help
+
+Each report in the Reporting-Service catalog can carry a `help` block: titled sections of text,
+term/meaning pairs and bullets. The Reports page shows it in a "How to read this report" panel,
+opened from a button beside the report and from the note after a download. The portal renders
+whatever the catalog declares, so **writing or changing help is an edit to the catalog, not the
+portal**. Reporting-Service tests keep each report's help in step with what the report produces.
 
 ---
 

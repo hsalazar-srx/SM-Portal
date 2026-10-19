@@ -18,6 +18,25 @@ export interface ReportParameter {
   description:   string | null;
 }
 
+/** A term and its meaning — a glossary entry, or one sheet of a workbook. */
+export interface ReportHelpItem {
+  term: string;
+  text: string;
+}
+
+/** One titled block of help. Any of text, items and bullets may be present. */
+export interface ReportHelpSection {
+  title:   string;
+  text:    string | null;
+  items:   ReportHelpItem[];
+  bullets: string[];
+}
+
+/** Help declared for a report in the Reporting-Service catalog. */
+export interface ReportHelp {
+  sections: ReportHelpSection[];
+}
+
 /** A catalog report, as returned by GET /api/reports. */
 export interface ReportDefinition {
   id:               string;
@@ -29,6 +48,7 @@ export interface ReportDefinition {
   defaultFormat:    string;
   maxRows:          number;
   parameters:       ReportParameter[];
+  help:             ReportHelp | null;
 }
 
 async function errorFrom(res: Response): Promise<Error> {
