@@ -48,6 +48,43 @@ public class ReportAccessTests
         Assert.False(access.CanRun(user, "Reporting_Read"));
     }
 
+    // ── Roles a report needs that the portal has no entry for ─────────────────────
+    // CanRun cannot tell "not configured" from "nobody in the group": both deny, silently. A catalog
+    // that names a role rbac-config.json lacks (a typo, or a catalog deployed before the portal config)
+    // would hide the report from everyone with no error, so these are reported — once each.
+
+    [Fact]
+    public void NewlyUnconfiguredRoles_ListsEachMissingRoleOnce_IgnoringCase()
+    {
+        var access = Access(new() { ["Reporting_Read"] = [FinanceSid] });
+
+        var first = access.NewlyUnconfiguredRoles(["Reporting_Read", "HR_Read", "hr_read", "Typo_Role"]);
+        var second = access.NewlyUnconfiguredRoles(["HR_Read", "Typo_Role"]);
+
+        Assert.Equal(["HR_Read", "Typo_Role"], first);
+        Assert.Empty(second);
+    }
+
+    [Fact]
+    public void NewlyUnconfiguredRoles_RoleThatIsConfiguredButEmpty_IsNotReported()
+    {
+        // No resolvable groups is a different problem, already logged at startup — don't double up.
+        var access = Access(new() { ["Reporting_SupplyChain"] = [] });
+
+        Assert.Empty(access.NewlyUnconfiguredRoles(["Reporting_SupplyChain"]));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("  ")]
+    public void NewlyUnconfiguredRoles_ReportWithNoRole_IsReportedAsNone(string? role)
+    {
+        var access = Access(new() { ["Reporting_Read"] = [FinanceSid] });
+
+        Assert.Equal(["(none)"], access.NewlyUnconfiguredRoles([role]));
+    }
+
     [Fact]
     public void ReportRoleNotConfigured_IsDenied()
     {

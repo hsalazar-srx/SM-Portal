@@ -37,12 +37,30 @@ public class ReportsController(
     /// Checked against the catalog rather than "holds any role", because rbac-config.json also
     /// holds M3 roles that grant no reports. Reporting-Service unavailable → not allowed.
     /// </summary>
+    // A report whose role the portal has no entry for is hidden from everyone, silently. Say so once.
+    private void WarnAboutUnconfiguredRoles(IReadOnlyList<ReportDefinitionDto> reports)
+    {
+        static string RoleOf(ReportDefinitionDto r) =>
+            string.IsNullOrWhiteSpace(r.RequiredRole) ? ReportAccess.NoRole : r.RequiredRole.Trim();
+
+        foreach (var role in access.NewlyUnconfiguredRoles(reports.Select(r => r.RequiredRole)))
+        {
+            var affected = reports.Where(r => string.Equals(RoleOf(r), role, StringComparison.OrdinalIgnoreCase))
+                .Select(r => r.Id);
+            logger.LogWarning(
+                "[ReportsController] Report(s) {Reports} require role {Role}, which rbac-config.json does not define — " +
+                "nobody can see them. Add the role there, or correct the report's requiredRole in the catalog.",
+                string.Join(", ", affected), role);
+        }
+    }
+
     [HttpGet("access")]
     public async Task<IActionResult> GetAccess(CancellationToken cancellationToken = default)
     {
         try
         {
             var reports = await reportApiClient.ListReportsAsync(HttpContext.TraceIdentifier, cancellationToken);
+            WarnAboutUnconfiguredRoles(reports);
             return Ok(new { allowed = reports.Any(r => access.CanRun(User, r.RequiredRole)) });
         }
         catch (Exception ex) when (ex is HttpRequestException or BrokenCircuitException
@@ -60,6 +78,7 @@ public class ReportsController(
         try
         {
             var reports = await reportApiClient.ListReportsAsync(correlationId, cancellationToken);
+            WarnAboutUnconfiguredRoles(reports);
             return Ok(reports.Where(r => access.CanRun(User, r.RequiredRole)).ToList());
         }
         catch (Exception ex) when (ex is HttpRequestException or BrokenCircuitException

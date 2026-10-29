@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using MovexPortal.Controllers;
 using MovexPortal.Models;
@@ -31,16 +32,22 @@ public class ReportsControllerTests
          { "id": "hr.headcount",        "displayName": "Headcount",      "requiredRole": "HR_Read" }]
         """;
 
-    private static readonly ReportAccess Access = new(new Dictionary<string, IReadOnlyCollection<string>>
+    private static ReportAccess NewAccess() => new(new Dictionary<string, IReadOnlyCollection<string>>
     {
         ["Reporting_Read"] = [FinanceSid]
     });
 
+    // Shared by most tests. ReportAccess remembers which missing roles it has already reported, so a test
+    // that asserts on that warning builds its own instance rather than relying on this one's history.
+    private static readonly ReportAccess Access = NewAccess();
+
     private static ClaimsPrincipal FinanceUser() => ReportAccessTests.User((ClaimTypes.GroupSid, FinanceSid));
     private static ClaimsPrincipal OtherUser() => ReportAccessTests.User((ClaimTypes.GroupSid, "S-1-5-21-100-200-300-5555"));
 
-    private static ReportsController CreateController(RoutingHandler handler, ClaimsPrincipal? user = null) =>
-        new(CreateClient(handler), Access, NullLogger<ReportsController>.Instance)
+    private static ReportsController CreateController(
+        RoutingHandler handler, ClaimsPrincipal? user = null, ILogger<ReportsController>? logger = null,
+        ReportAccess? access = null) =>
+        new(CreateClient(handler), access ?? Access, logger ?? NullLogger<ReportsController>.Instance)
         {
             ControllerContext = new ControllerContext
             {
@@ -66,6 +73,26 @@ public class ReportsControllerTests
         var result = await CreateController(new RoutingHandler(), OtherUser()).GetAccess(CancellationToken.None);
 
         Assert.False(Allowed(result));
+    }
+
+    [Fact]
+    public async Task List_ReportRequiringAnUnconfiguredRole_IsHidden_AndWarnedAboutOnce()
+    {
+        // CatalogJson's Headcount report needs HR_Read, which the test config does not define — the
+        // same silent "nobody can see it" a typo'd or not-yet-deployed role would cause in production.
+        var logger = new CapturingLogger<ReportsController>();
+        var controller = CreateController(new RoutingHandler(), FinanceUser(), logger, NewAccess());
+
+        var first = await controller.List(CancellationToken.None);
+        await controller.List(CancellationToken.None);
+        await controller.GetAccess(CancellationToken.None);
+
+        var ids = Assert.IsAssignableFrom<IEnumerable<ReportDefinitionDto>>(Assert.IsType<OkObjectResult>(first).Value)
+            .Select(r => r.Id);
+        Assert.DoesNotContain("hr.headcount", ids);
+        var warning = Assert.Single(logger.Warnings);
+        Assert.Contains("HR_Read", warning);
+        Assert.Contains("hr.headcount", warning);
     }
 
     [Fact]
@@ -246,6 +273,21 @@ public class ReportsControllerTests
 
     private static string ErrorText(ObjectResult result) =>
         result.Value?.GetType().GetProperty("error")?.GetValue(result.Value)?.ToString() ?? string.Empty;
+
+    /// <summary>Keeps the formatted text of every warning, so a test can assert what was logged.</summary>
+    private sealed class CapturingLogger<T> : ILogger<T>
+    {
+        public List<string> Warnings { get; } = [];
+
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
+            Func<TState, Exception?, string> formatter)
+        {
+            if (logLevel == LogLevel.Warning) Warnings.Add(formatter(state, exception));
+        }
+    }
 
     /// <summary>Fake Reporting-Service: GET = catalog, POST = execute. Records every request.</summary>
     private sealed class RoutingHandler(
