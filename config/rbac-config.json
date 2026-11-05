@@ -34,6 +34,34 @@
       "adGroups": ["SRXGLOBAL\\rpt-reader", "SRXGLOBAL\\grp-fin-manager"],
       "allowedEndpoints": [],
       "maxRiskLevel": "LOW"
+    },
+    {
+      "name": "Reporting_General",
+      "description": "Non-sensitive reference reports, e.g. Inventory List. Application Role rpt-reader; rpt-admin for reporting support. grp-fin-manager is interim (keeps Finance's current access) until Business Function groups are nested into rpt-reader (ADR-061), then remove it. Grants no M3 endpoints.",
+      "adGroups": ["SRXGLOBAL\\rpt-reader", "SRXGLOBAL\\rpt-admin", "SRXGLOBAL\\grp-fin-manager"],
+      "allowedEndpoints": [],
+      "maxRiskLevel": "LOW"
+    },
+    {
+      "name": "Reporting_Finance_Management",
+      "description": "Finance management reports with money values, e.g. Inventory Valuation. Application Role rpt-finance-mgmt; rpt-admin for reporting support. grp-fin-manager is interim until it is nested into rpt-finance-mgmt (ADR-061), then remove it. Grants no M3 endpoints.",
+      "adGroups": ["SRXGLOBAL\\rpt-finance-mgmt", "SRXGLOBAL\\rpt-admin", "SRXGLOBAL\\grp-fin-manager"],
+      "allowedEndpoints": [],
+      "maxRiskLevel": "LOW"
+    },
+    {
+      "name": "Reporting_SupplyChain",
+      "description": "Supply Chain operational reports (stage 3 onward). Application Role rpt-supplychain with grp-sc-buyer and grp-sc-manager nested in AD; rpt-admin for reporting support. Grants no M3 endpoints. Knowledge vault ADR-061.",
+      "adGroups": ["SRXGLOBAL\\rpt-supplychain", "SRXGLOBAL\\rpt-admin"],
+      "allowedEndpoints": [],
+      "maxRiskLevel": "LOW"
+    },
+    {
+      "name": "Reporting_SupplyChain_Management",
+      "description": "Supply Chain management reports (buyer performance), e.g. POs Issued by Buyer. Application Role rpt-supplychain-mgmt with grp-sc-manager nested in AD; rpt-admin for reporting support. Grants no M3 endpoints. Knowledge vault ADR-061.",
+      "adGroups": ["SRXGLOBAL\\rpt-supplychain-mgmt", "SRXGLOBAL\\rpt-admin"],
+      "allowedEndpoints": [],
+      "maxRiskLevel": "LOW"
     }
   ]
 }

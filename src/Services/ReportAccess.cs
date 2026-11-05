@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Security.Claims;
 using System.Security.Principal;
 
@@ -29,10 +30,36 @@ public sealed class ReportAccess
         _roleSids = new Dictionary<string, IReadOnlyCollection<string>>(roleSids, StringComparer.OrdinalIgnoreCase);
     }
 
+    // Roles already reported as missing, so a role the catalog names but the config lacks is logged once,
+    // not on every page load.
+    private readonly ConcurrentDictionary<string, bool> _reportedUnconfigured = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>The name used for a report that declares no role at all.</summary>
+    public const string NoRole = "(none)";
+
+    /// <summary>
+    /// Roles that reports require but rbac-config.json does not define, each returned only the first time
+    /// it is seen. <see cref="CanRun"/> denies both "role not configured" and "nobody is in the group", so a
+    /// typo in the catalog — or a catalog deployed before the portal config — would hide a report from
+    /// everyone without any error. A role that is configured but has no resolvable groups is not reported
+    /// here: startup already logs that.
+    /// </summary>
+    public IReadOnlyList<string> NewlyUnconfiguredRoles(IEnumerable<string?> requiredRoles)
+    {
+        var found = new List<string>();
+        foreach (var required in requiredRoles)
+        {
+            var role = string.IsNullOrWhiteSpace(required) ? NoRole : required.Trim();
+            if (role != NoRole && _roleSids.ContainsKey(role)) continue;
+            if (_reportedUnconfigured.TryAdd(role, true)) found.Add(role);
+        }
+        return found;
+    }
+
     /// <summary>True when the user holds the role a report requires.</summary>
     public bool CanRun(ClaimsPrincipal user, string? requiredRole)
     {
-        if (string.IsNullOrWhiteSpace(requiredRole) || !_roleSids.TryGetValue(requiredRole, out var sids))
+        if (string.IsNullOrWhiteSpace(requiredRole) || !_roleSids.TryGetValue(requiredRole.Trim(), out var sids))
             return false;
 
         return UserSids(user).Overlaps(sids);
