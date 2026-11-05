@@ -59,7 +59,7 @@ public sealed class ReportAccess
     /// <summary>True when the user holds the role a report requires.</summary>
     public bool CanRun(ClaimsPrincipal user, string? requiredRole)
     {
-        if (string.IsNullOrWhiteSpace(requiredRole) || !_roleSids.TryGetValue(requiredRole, out var sids))
+        if (string.IsNullOrWhiteSpace(requiredRole) || !_roleSids.TryGetValue(requiredRole.Trim(), out var sids))
             return false;
 
         return UserSids(user).Overlaps(sids);

@@ -113,6 +113,14 @@ public class ReportAccessTests
     }
 
     [Fact]
+    public void PaddedRoleName_IsTrimmedBeforeLookup()
+    {
+        var access = Access(new() { ["Reporting_Read"] = [FinanceSid] });
+
+        Assert.True(access.CanRun(User((ClaimTypes.GroupSid, FinanceSid)), " Reporting_Read "));
+    }
+
+    [Fact]
     public void IndividualUserMapping_MatchesPrimarySid()
     {
         const string userSid = "S-1-5-21-100-200-300-9999";
