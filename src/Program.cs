@@ -188,6 +188,24 @@ builder.Services.AddSingleton(sp =>
         sp.GetRequiredService<ILoggerFactory>().CreateLogger<ReportAccess>());
 });
 
+// Supply Chain Workbench proxy — same Reporting-Service base URL and API key.
+//   - 60s timeout: the slowest read (the summary over every open line) takes ~2s normally and longer when MOVEX is slow.
+//   - No retry: an edit must never be sent twice, and a slow read must not multiply load on MOVEX.
+//     The circuit breaker alone stops hammering a service that is down.
+builder.Services.AddHttpClient<SupplyChainApiClient>(client =>
+{
+    var baseUrl = EnsureTrailingSlash(reportingApiBaseUrl ?? "http://localhost:5052/");
+    client.BaseAddress = new Uri(baseUrl);
+    client.DefaultRequestHeaders.Add("X-API-Key", reportingApiKey ?? string.Empty);
+    client.Timeout = TimeSpan.FromSeconds(60);
+})
+.AddPolicyHandler(HttpPolicyExtensions
+    .HandleTransientHttpError()
+    .CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
+
+// Which Workbench role a person acts in (buyer, planner or manager), from the same AD-group mapping as report access.
+builder.Services.AddSingleton(sp => new SupplyChainAccess(sp.GetRequiredService<ReportAccess>()));
+
 // CORS for frontend SPA.
 // In production the frontend is served as static files from the same IIS site,
 // so the frontend and API share the same origin — CORS is not required.
