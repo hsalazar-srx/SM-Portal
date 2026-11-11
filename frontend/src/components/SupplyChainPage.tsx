@@ -12,6 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { H2, Muted } from '@/components/ui/typography';
 import supplyChainService, { type SupplyChainAccess } from '@/services/supplyChainService';
 import reportService from '@/services/reportService';
+import WorkbenchTab from '@/components/supply-chain/WorkbenchTab';
 import {
   canRunSupplyChainReports,
   roleGuidance,
@@ -25,9 +26,8 @@ type AccessState =
   | { status: 'error'; message: string }
   | { status: 'ready'; access: SupplyChainAccess };
 
-/** What each tab will hold. Each is built in its own release; until then the tab says so instead of staying blank. */
-const COMING: Record<SupplyChainTabId, string> = {
-  workbench: 'The list of purchase lines, with the cards that filter it, is the next release.',
+/** What the unbuilt tabs will hold. Each is built in its own release; until then the tab says so instead of staying blank. */
+const COMING: Record<Exclude<SupplyChainTabId, 'workbench'>, string> = {
   dashboard: 'The backlog per buyer and the trend are built after the Workbench.',
   reports: 'The Supply Chain reports will be listed here. Until then, use Reports on the home page.',
   categories: 'The Category menu will be shown here; managers will be able to edit it.',
@@ -71,6 +71,10 @@ export default function SupplyChainPage() {
 
   const tabs = visibleTabs(canRunReports);
 
+  // The role of a person who may use the Workbench; null while checking, on a failed check, or with no access.
+  // A constant, so the tab callbacks below keep the "not null" narrowing that a state property would lose.
+  const role = state.status === 'ready' ? state.access.role : null;
+
   return (
     <div className="min-h-screen bg-bg text-text flex flex-col">
       <ResponsiveHeader
@@ -105,12 +109,12 @@ export default function SupplyChainPage() {
           </Alert>
         )}
 
-        {state.status === 'ready' && state.access.allowed && state.access.role && (
+        {role && (
           <>
             {/* Context bar: who the portal thinks you are, and what that allows. */}
             <div className="flex flex-wrap items-center gap-sm rounded-md border border-outline bg-surface px-md py-sm">
-              <Badge variant="primary">{roleLabel(state.access.role)}</Badge>
-              <span className="text-sm text-text-weak">{roleGuidance(state.access.role)}</span>
+              <Badge variant="primary">{roleLabel(role)}</Badge>
+              <span className="text-sm text-text-weak">{roleGuidance(role)}</span>
             </div>
 
             <Tabs value={tab} onValueChange={value => setTab(value as SupplyChainTabId)}>
@@ -124,7 +128,9 @@ export default function SupplyChainPage() {
 
               {tabs.map(t => (
                 <TabsContent key={t.id} value={t.id}>
-                  <Alert kind="info" title={`${t.label} is on its way`}>{COMING[t.id]}</Alert>
+                  {t.id === 'workbench'
+                    ? <WorkbenchTab role={role} />
+                    : <Alert kind="info" title={`${t.label} is on its way`}>{COMING[t.id]}</Alert>}
                 </TabsContent>
               ))}
             </Tabs>
