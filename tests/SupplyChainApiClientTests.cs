@@ -155,4 +155,74 @@ public class SupplyChainApiClientTests
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
         Assert.Contains("changedBy", response.Body);
     }
+
+    // ── The circuit breaker ───────────────────────────────────────────────────────
+    // It exists to stop hammering a Reporting-Service that is down. A 503 from Reporting-Service is a deliberate answer
+    // ("store busy, retry in 2 s", "Workbench not configured on this server"), not a sign it is down, so it must not
+    // count: otherwise three of them open the circuit and every call fails for 30 s with a misleading "temporarily
+    // unavailable" until the circuit closes again.
+
+    /// <summary>A client whose requests go through the real breaker, answering with <paramref name="respond"/>.</summary>
+    private static (SupplyChainApiClient Client, Func<int> Calls) ClientBehindBreaker(Func<HttpResponseMessage> respond)
+    {
+        var calls = 0;
+        var inner = new FakeHandler(_ => { calls++; return respond(); });
+        var handler = new Microsoft.Extensions.Http.PolicyHttpMessageHandler(SupplyChainApiClient.CircuitBreaker())
+        {
+            InnerHandler = inner,
+        };
+        var client = new SupplyChainApiClient(
+            new HttpClient(handler) { BaseAddress = new Uri("http://reporting.test/") },
+            NullLogger<SupplyChainApiClient>.Instance);
+        return (client, () => calls);
+    }
+
+    [Fact]
+    public async Task Breaker_ADeliberate503_NeverOpensTheCircuit()
+    {
+        var (client, calls) = ClientBehindBreaker(() =>
+            Json(HttpStatusCode.ServiceUnavailable, """{"code":"WORKBENCH_NOT_CONFIGURED","message":"not configured"}"""));
+
+        for (var i = 0; i < 10; i++)
+        {
+            var response = await client.GetAsync("rows", Query(), Buyer);
+            Assert.Equal(HttpStatusCode.ServiceUnavailable, response.Status);
+            Assert.Contains("not configured", response.Body);
+        }
+
+        Assert.Equal(10, calls());   // every request reached Reporting-Service; none was refused by an open circuit
+    }
+
+    [Fact]
+    public async Task Breaker_RepeatedServerFaults_OpenTheCircuitSoTheServiceIsLeftAlone()
+    {
+        var (client, calls) = ClientBehindBreaker(() => Json(HttpStatusCode.InternalServerError, "{}"));
+
+        for (var i = 0; i < 3; i++)
+            await client.GetAsync("rows", Query(), Buyer);
+
+        await Assert.ThrowsAsync<Polly.CircuitBreaker.BrokenCircuitException<HttpResponseMessage>>(
+            () => client.GetAsync("rows", Query(), Buyer));
+        Assert.Equal(3, calls());        // the fourth never left the portal
+    }
+
+    [Fact]
+    public async Task Breaker_RepeatedConnectionFailures_OpenTheCircuit()
+    {
+        var calls = 0;
+        var inner = new FakeHandler(_ => { calls++; throw new HttpRequestException("connection refused"); });
+        var handler = new Microsoft.Extensions.Http.PolicyHttpMessageHandler(SupplyChainApiClient.CircuitBreaker())
+        {
+            InnerHandler = inner,
+        };
+        var client = new SupplyChainApiClient(
+            new HttpClient(handler) { BaseAddress = new Uri("http://reporting.test/") },
+            NullLogger<SupplyChainApiClient>.Instance);
+
+        for (var i = 0; i < 3; i++)
+            await Assert.ThrowsAsync<HttpRequestException>(() => client.GetAsync("rows", Query(), Buyer));
+
+        await Assert.ThrowsAsync<Polly.CircuitBreaker.BrokenCircuitException>(() => client.GetAsync("rows", Query(), Buyer));
+        Assert.Equal(3, calls);
+    }
 }

@@ -199,9 +199,7 @@ builder.Services.AddHttpClient<SupplyChainApiClient>(client =>
     client.DefaultRequestHeaders.Add("X-API-Key", reportingApiKey ?? string.Empty);
     client.Timeout = TimeSpan.FromSeconds(60);
 })
-.AddPolicyHandler(HttpPolicyExtensions
-    .HandleTransientHttpError()
-    .CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
+.AddPolicyHandler(SupplyChainApiClient.CircuitBreaker());   // one instance: its state is shared by every request
 
 // Which Workbench role a person acts in (buyer, planner or manager), from the same AD-group mapping as report access.
 builder.Services.AddSingleton(sp => new SupplyChainAccess(sp.GetRequiredService<ReportAccess>()));

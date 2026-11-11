@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Net;
 using System.Text;
+using Polly;
 
 namespace MovexPortal.Services;
 
@@ -27,6 +28,20 @@ public class SupplyChainApiClient(HttpClient httpClient, ILogger<SupplyChainApiC
     /// <summary>The read resources a browser may reach. The sync endpoint is deliberately not among them.</summary>
     public static readonly IReadOnlySet<string> ReadResources =
         new HashSet<string>(StringComparer.Ordinal) { "rows", "summary", "trend", "categories" };
+
+    /// <summary>
+    /// The circuit breaker the client is registered with (Program.cs). No retry: see the registration.
+    /// It counts connection failures, 408 and server faults (5xx), but not 503: Reporting-Service answers 503 on
+    /// purpose, with a message for the person ("store busy, retry in 2 s", "Workbench not configured on this
+    /// server"). Counting those would open the circuit after three of them and turn every call into a generic 502
+    /// for 30 s.
+    /// </summary>
+    public static IAsyncPolicy<HttpResponseMessage> CircuitBreaker() =>
+        Policy<HttpResponseMessage>
+            .Handle<HttpRequestException>()
+            .OrResult(r => r.StatusCode == HttpStatusCode.RequestTimeout
+                || ((int)r.StatusCode >= 500 && r.StatusCode != HttpStatusCode.ServiceUnavailable))
+            .CircuitBreakerAsync(3, TimeSpan.FromSeconds(30));
 
     public async Task<SupplyChainResponse> GetAsync(
         string resource,

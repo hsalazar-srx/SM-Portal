@@ -193,6 +193,7 @@ public class SupplyChainControllerTests
     [InlineData(HttpStatusCode.Forbidden)]
     [InlineData(HttpStatusCode.NotFound)]
     [InlineData(HttpStatusCode.Conflict)]
+    [InlineData(HttpStatusCode.ServiceUnavailable)]   // e.g. "The Workbench database is not configured on this server", no Retry-After
     public async Task Rows_ReportingServicesOwnExplanation_PassesThrough(HttpStatusCode upstream)
     {
         var result = await Controller(Upstream(upstream, """{"code":"X","message":"card must be one of: noPo"}"""), Manager()).Rows();
