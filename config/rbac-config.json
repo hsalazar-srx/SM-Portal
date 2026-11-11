@@ -34,6 +34,27 @@
       "adGroups": ["SRXGLOBAL\\rpt-reader", "SRXGLOBAL\\grp-fin-manager"],
       "allowedEndpoints": [],
       "maxRiskLevel": "LOW"
+    },
+    {
+      "name": "SupplyChain_Buyer",
+      "description": "Supply Chain Workbench: sees and edits (Category, Details) the lines of their own MOVEX buyer codes. Reporting-Service decides which lines those are. Grants no M3 endpoints. grp-sc-buyer is nested in pur-buyer (ADR-061).",
+      "adGroups": ["SRXGLOBAL\\pur-buyer"],
+      "allowedEndpoints": [],
+      "maxRiskLevel": "LOW"
+    },
+    {
+      "name": "SupplyChain_Planner",
+      "description": "Supply Chain Workbench: sees every line and writes Planners Notes only. Grants no M3 endpoints. The AD group does not exist yet (ADR-061 amendment, 2026-11-05: to be requested from Manal, proposed name pur-planner); empty means nobody holds the role.",
+      "adGroups": [],
+      "allowedEndpoints": [],
+      "maxRiskLevel": "LOW"
+    },
+    {
+      "name": "SupplyChain_Manager",
+      "description": "Supply Chain Workbench: sees every line and edits Category and Details on all of them, including generic buyer codes. Grants no M3 endpoints. grp-sc-manager is nested in pur-manager (ADR-061).",
+      "adGroups": ["SRXGLOBAL\\pur-manager", "SRXGLOBAL\\pur-admin"],
+      "allowedEndpoints": [],
+      "maxRiskLevel": "LOW"
     }
   ]
 }

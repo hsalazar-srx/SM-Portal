@@ -44,4 +44,29 @@ public class RbacConfigFileTests
         Assert.NotNull(role.AdGroups);
         Assert.Empty(role.AllowedEndpoints);
     }
+
+    [Theory]
+    [InlineData("SupplyChain_Buyer")]
+    [InlineData("SupplyChain_Planner")]
+    [InlineData("SupplyChain_Manager")]
+    public async Task SupplyChainRoles_AreDefined_AndGrantNoM3Endpoints(string name)
+    {
+        // The Workbench roles are the contract with SupplyChainAccess. The planner group may be empty until
+        // AD creates it: empty means nobody holds the role (deny by default).
+        var config = await new RbacConfigProvider(ConfigPath()).GetConfigAsync();
+
+        var role = Assert.Single(config.Roles, r => r.Name == name);
+        Assert.NotNull(role.AdGroups);
+        Assert.Empty(role.AllowedEndpoints);
+    }
+
+    [Fact]
+    public async Task SupplyChainRoles_MapToTheAgreedGroups()
+    {
+        var config = await new RbacConfigProvider(ConfigPath()).GetConfigAsync();
+        string[] Groups(string role) => config.Roles.Single(r => r.Name == role).AdGroups.ToArray();
+
+        Assert.Equal(new[] { @"SRXGLOBAL\pur-buyer" }, Groups("SupplyChain_Buyer"));
+        Assert.Equal(new[] { @"SRXGLOBAL\pur-manager", @"SRXGLOBAL\pur-admin" }, Groups("SupplyChain_Manager"));
+    }
 }
