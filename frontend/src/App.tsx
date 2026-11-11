@@ -8,6 +8,7 @@ import ComponentShowcase from './components/ComponentShowcase';
 import InvoicesPage from './components/InvoicesPage';
 import ExchangeRatePage from './components/ExchangeRatePage';
 import ReportsPage from './components/ReportsPage';
+import SupplyChainPage from './components/SupplyChainPage';
 
 export default function App() {
   const { user, isLoading } = useAuth();
@@ -37,6 +38,7 @@ export default function App() {
       <Route path="/invoices" element={<InvoicesPage />} />
       <Route path="/exchange-rates" element={<ExchangeRatePage />} />
       <Route path="/reports" element={<ReportsPage />} />
+      <Route path="/supply-chain" element={<SupplyChainPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

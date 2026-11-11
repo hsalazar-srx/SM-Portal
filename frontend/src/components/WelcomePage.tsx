@@ -8,6 +8,7 @@ import { Alert } from '@/components/ui/alert';
 import { H2, Display, Body, Code } from '@/components/ui/typography';
 import { useEffect, useState } from 'react';
 import reportService from '@/services/reportService';
+import supplyChainService from '@/services/supplyChainService';
 
 export default function WelcomePage() {
   const { user, signOut } = useAuth();
@@ -18,6 +19,13 @@ export default function WelcomePage() {
   const [canAccessReports, setCanAccessReports] = useState(false);
   useEffect(() => {
     reportService.canAccess().then(setCanAccessReports).catch(() => setCanAccessReports(false));
+  }, []);
+
+  // Supply Chain tile: enabled only for people who hold a Workbench role (buyer, planner or manager).
+  // Same idea as Reports: the server enforces it, this only avoids offering a page that would say "no access".
+  const [canAccessSupplyChain, setCanAccessSupplyChain] = useState(false);
+  useEffect(() => {
+    supplyChainService.canAccess().then(setCanAccessSupplyChain);
   }, []);
 
   if (!user) {
@@ -133,6 +141,13 @@ export default function WelcomePage() {
                   icon: '📑',
                   path: '/reports',
                   disabled: !canAccessReports,
+                },
+                {
+                  title: 'Supply Chain Workbench',
+                  desc: 'Update purchase lines and see what needs ordering, what is late and what is waiting on a supplier',
+                  icon: '📦',
+                  path: '/supply-chain',
+                  disabled: !canAccessSupplyChain,
                 },
                 {
                   title: 'Role Management',
