@@ -35,6 +35,48 @@ export interface LineEntry {
   updatedUtc: string | null;
 }
 
+const ENTRY_FIELDS = ['category', 'details', 'plannersNotes'] as const;
+
+/** The three things a person can write against a line. */
+export type EntryField = (typeof ENTRY_FIELDS)[number];
+
+/**
+ * PATCH /supply-chain/entry. A field left out is not changed; an empty string clears it (null would mean "leave
+ * it"). `expected` is the value the screen was showing for each field being changed: if someone else has changed it
+ * since, nothing is saved and the answer is a conflict.
+ */
+export interface EntryRequest {
+  division: string;
+  lineKey: string;
+  category?: string;
+  details?: string;
+  plannersNotes?: string;
+  expected?: Partial<Record<EntryField, string | null>>;
+}
+
+/** The answer to a save: "Saved", or "NoChange" when the value was already there, and the line's entry afterwards. */
+export interface SavedEntry {
+  status: 'Saved' | 'NoChange';
+  entry: LineEntry;
+}
+
+/**
+ * The save was refused because the screen was out of date: someone else changed the field first. Carries who and
+ * when (null if unknown) and what the line holds now, so the screen can offer "keep theirs" or "use mine".
+ */
+export class EntryConflictError extends Error {
+  constructor(
+    message: string,
+    readonly field: EntryField,
+    readonly changedBy: string | null,
+    readonly changedUtc: string | null,
+    readonly entry: LineEntry,
+  ) {
+    super(message);
+    this.name = 'EntryConflictError';
+  }
+}
+
 /** Whether MOVEX was asked about the line's PO and what it said. */
 export type LiveState = 'Found' | 'NotInMovex' | 'None' | 'Unavailable';
 
@@ -118,6 +160,22 @@ async function errorFrom(res: Response): Promise<Error> {
   return new Error(body.error ?? body.message ?? `HTTP ${res.status}: ${res.statusText}`);
 }
 
+/**
+ * A 409 from the entry endpoint is { message, field ("Category"), changedBy, changedUtc, entry }. Anything that does
+ * not look like that, or names a field this screen does not know, is read as an ordinary error, so a surprising 409
+ * still shows a message instead of breaking.
+ */
+async function conflictFrom(res: Response): Promise<Error> {
+  const body = await res.clone().json().catch(() => null);
+  const field = typeof body?.field === 'string' ? body.field.charAt(0).toLowerCase() + body.field.slice(1) : '';
+  if (!(ENTRY_FIELDS as readonly string[]).includes(field) || typeof body.entry !== 'object' || !body.entry) {
+    return errorFrom(res);
+  }
+  return new EntryConflictError(
+    body.message ?? 'This was changed by someone else.', field as EntryField,
+    body.changedBy ?? null, body.changedUtc ?? null, body.entry);
+}
+
 class SupplyChainService {
   /**
    * Who the person is to the Workbench. Anything the server sends that is not exactly allowed + a known role counts
@@ -148,6 +206,22 @@ class SupplyChainService {
     const query = new URLSearchParams(params).toString();
     const url = `${API_BASE}/supply-chain/${resource}${query ? `?${query}` : ''}`;
     const res = await fetch(url, { method: 'GET', credentials: 'include' });
+    if (!res.ok) throw await errorFrom(res);
+    return res.json();
+  }
+
+  /**
+   * Saves a change to one line. Throws EntryConflictError when someone else changed the field first, and an Error
+   * carrying the server's own explanation for anything else (not allowed, not on the menu, too long, busy).
+   */
+  async saveEntry(request: EntryRequest): Promise<SavedEntry> {
+    const res = await fetch(`${API_BASE}/supply-chain/entry`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    });
+    if (res.status === 409) throw await conflictFrom(res);
     if (!res.ok) throw await errorFrom(res);
     return res.json();
   }

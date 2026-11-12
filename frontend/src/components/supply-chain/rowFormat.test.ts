@@ -7,6 +7,7 @@ import {
   okNgDisplay,
   poStatusText,
   updatedText,
+  utcText,
 } from './rowFormat';
 import type { LiveFields } from '@/services/supplyChainService';
 
@@ -94,6 +95,13 @@ describe('dateText', () => {
   it('shows an ISO date as it is, and a dash for none', () => {
     expect(dateText('2026-11-27')).toBe('2026-11-27');
     expect(dateText(null)).toBe('—');
+  });
+});
+
+describe('utcText', () => {
+  it('shows a UTC stamp to the minute, saying it is UTC', () => {
+    expect(utcText('2026-11-12T00:30:45')).toBe('2026-11-12 00:30 UTC');
+    expect(utcText('2026-11-12T00:30:00.1234567')).toBe('2026-11-12 00:30 UTC');
   });
 });
 

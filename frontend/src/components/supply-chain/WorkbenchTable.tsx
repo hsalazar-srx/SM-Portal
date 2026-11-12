@@ -5,11 +5,24 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Caption } from '@/components/ui/typography';
 import { cn } from '@/lib/utils';
-import type { WorkbenchRow } from '@/services/supplyChainService';
+import type { Category, EntryField, LineEntry, WorkbenchRow } from '@/services/supplyChainService';
+import EntryCell from './EntryCell';
 import {
   DASH, buyStatusVariant, dateText, etaText, formatNumber, okNgDisplay, poStatusText, updatedText,
 } from './rowFormat';
 import { pageCount, pageRange, type SortKey } from './workbenchState';
+
+/** What the table needs to let the person change a line: which fields, and what to do when one is saved. */
+export interface EntryEditing {
+  /** The fields this person's role may change. Everything else is shown read-only. */
+  fields: readonly EntryField[];
+  division: string;
+  categories: Category[];
+  /** True while the list is reloading: the cells cannot be edited until it has arrived. */
+  locked: boolean;
+  /** One field of a line was saved (or replaced by "Keep theirs"); `entry` is the line's entry as the server has it. */
+  onSaved: (lineKey: string, field: EntryField, entry: LineEntry) => void;
+}
 
 interface Column {
   id: string;
@@ -17,8 +30,17 @@ interface Column {
   /** Present only for columns the server can sort. Live MOVEX fields cannot be sorted. */
   sort?: SortKey;
   align?: 'right';
-  render: (row: WorkbenchRow) => ReactNode;
+  render: (row: WorkbenchRow, editing: EntryEditing) => ReactNode;
 }
+
+/** An entry column: editable when the person's role allows it, otherwise the text, cut to the column. */
+const entryColumn = (id: string, label: string, field: EntryField, width: string, sort?: SortKey): Column => ({
+  id, label, sort,
+  render: (r, editing) => editing.fields.includes(field)
+    ? <EntryCell row={r} field={field} division={editing.division} categories={editing.categories}
+        locked={editing.locked} onSaved={editing.onSaved} />
+    : clipped(r.entry[field], width),
+});
 
 const muted = (text: string | null) => <span className="text-text-weak">{text ?? DASH}</span>;
 
@@ -35,7 +57,7 @@ const COLUMNS: readonly Column[] = [
     id: 'item', label: 'Item', sort: 'item',
     render: r => (
       <>
-        <span className="font-mono">{r.item}</span>
+        <span className="font-mono whitespace-nowrap">{r.item}</span>
         {r.description && <span className="block max-w-[16rem] truncate text-xs text-text-weak" title={r.description}>{r.description}</span>}
       </>
     ),
@@ -63,21 +85,23 @@ const COLUMNS: readonly Column[] = [
       return <Badge size="sm" variant={d.variant} title={d.title}>{d.label}</Badge>;
     },
   },
-  { id: 'category', label: 'Category', sort: 'category', render: r => clipped(r.entry.category, 'max-w-[10rem]') },
-  { id: 'details', label: 'Details / Issue', render: r => clipped(r.entry.details, 'max-w-[14rem]') },
-  { id: 'notes', label: 'Planners Notes', render: r => clipped(r.entry.plannersNotes, 'max-w-[12rem]') },
+  entryColumn('category', 'Category', 'category', 'max-w-[10rem]', 'category'),
+  entryColumn('details', 'Details / Issue', 'details', 'max-w-[14rem]'),
+  entryColumn('notes', 'Planners Notes', 'plannersNotes', 'max-w-[12rem]'),
   { id: 'updated', label: 'Updated', sort: 'updated', render: r => <span className="whitespace-nowrap">{updatedText(r.entry)}</span> },
 ];
 
 /**
- * The lines, read-only for now. The header stays in view while the body scrolls; a column the server can sort is a
+ * The lines. Category, Details and Planners Notes are editable cells for the roles that may change them; everything
+ * else is read-only. The header stays in view while the body scrolls; a column the server can sort is a
  * button, and the sorted one says which way. Below it: paging, with the range shown. While a new page loads the old
  * rows stay (dimmed) so the table does not jump.
  */
 export default function WorkbenchTable({
-  rows, total, page, pageSize, sort, descending, loading, onSort, onPage,
+  rows, total, page, pageSize, sort, descending, loading, editing, onSort, onPage,
 }: {
   rows: WorkbenchRow[];
+  editing: EntryEditing;
   total: number;
   page: number;
   pageSize: number;
@@ -126,7 +150,7 @@ export default function WorkbenchTable({
               <tr key={row.lineKey} className={cn('border-b border-outline hover:bg-surface transition-colors duration-normal', row.closedDate && 'opacity-70')}>
                 {COLUMNS.map(col => (
                   <td key={col.id} className={cn('px-md py-sm align-top', col.align === 'right' && 'text-right')}>
-                    {col.render(row)}
+                    {col.render(row, editing)}
                   </td>
                 ))}
               </tr>

@@ -7,8 +7,9 @@ import { Card, CardBody } from '@/components/ui/card';
 import { LoadingState } from '@/components/ui/spinner';
 import { Caption } from '@/components/ui/typography';
 import supplyChainService, {
-  type Category, type RowsPage, type Summary, type SupplyChainRole,
+  type Category, type EntryField, type LineEntry, type RowsPage, type Summary, type SupplyChainRole,
 } from '@/services/supplyChainService';
+import { editableFields, withEntry } from './entryEdit';
 import WorkbenchCards from './WorkbenchCards';
 import WorkbenchFilterBar from './WorkbenchFilterBar';
 import WorkbenchTable from './WorkbenchTable';
@@ -18,9 +19,9 @@ import {
 } from './workbenchState';
 
 /**
- * The Workbench list: cards that filter, a filter row, and the lines with their live MOVEX fields. Read-only for
- * now. Reporting-Service decides which lines the person may see, so nothing here narrows by role except hiding a
- * buyer filter a buyer has no use for.
+ * The Workbench list: cards that filter, a filter row, and the lines with their live MOVEX fields. The person's
+ * role decides which cells are editable. Reporting-Service decides which lines the person may see and change, so
+ * nothing here narrows by role except hiding a buyer filter a buyer has no use for.
  *
  * The lines and the summary load separately, so the table appears without waiting for the (slower) summary. A newer
  * request always wins over an older one still in flight. "Refresh from MOVEX" asks for a fresh read instead of the
@@ -69,6 +70,13 @@ export default function WorkbenchTab({ role }: { role: SupplyChainRole }) {
   useEffect(() => {
     supplyChainService.getCategories().then(setCategories).catch(() => setCategories([]));
   }, []);
+
+  // A saved change is shown straight away without reloading the page. The summary is read again because "Not
+  // updated" depends on it; the server keeps the slow MOVEX read for a minute, so this is cheap.
+  const entrySaved = useCallback((lineKey: string, field: EntryField, entry: LineEntry) => {
+    setLoaded(l => (l && { ...l, page: { ...l.page, rows: withEntry(l.page.rows, lineKey, field, entry) } }));
+    void fetchSummary(false);
+  }, [fetchSummary]);
 
   async function refresh() {
     setRefreshing(true);
@@ -152,6 +160,7 @@ export default function WorkbenchTab({ role }: { role: SupplyChainRole }) {
           sort={state.sort}
           descending={state.descending}
           loading={loading}
+          editing={{ fields: editableFields(role), division: state.division, categories, locked: loading, onSaved: entrySaved }}
           onSort={key => setState(s => sortBy(s, key))}
           onPage={page => setState(s => goToPage(s, page))}
         />

@@ -61,10 +61,15 @@ export function dateText(date: string | null): string {
 }
 
 /** DOMAIN\name → name. */
-function shortUser(user: string | null): string {
+export function shortUser(user: string | null): string {
   if (!user) return '';
   const slash = user.lastIndexOf('\\');
   return slash >= 0 ? user.slice(slash + 1) : user;
+}
+
+/** A UTC stamp written without a zone ("2026-11-12T00:30:00") as "2026-11-12 00:30 UTC". */
+export function utcText(stamp: string): string {
+  return `${stamp.replace('T', ' ').slice(0, 16)} UTC`;
 }
 
 /** Who last changed the line and on which day, or "never". The stamp is UTC, written without a zone. */
